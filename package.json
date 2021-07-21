@@ -1,0 +1,18 @@
+{
+  "name": "social-learning-backend",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "main": "api/app.ts",
+  "scripts": {
+    "dev": "ts-node-dev --transpile-only --no-notify api/app.ts",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^16.4.0",
+    "prettier": "^2.3.2",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.3.5"
+  }
+}
