@@ -1,0 +1,150 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator nexusPrisma {
+  provider = "nexus-prisma"
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  provider    Provider
+  providerUid String
+  username    String   @unique /// It's optional here but it should be enforced by the application
+  isActive    Boolean  @default(true) /// isActive is false if the user is banned
+  email       String?
+
+  firstName String
+  lastName  String
+  avatar    String   @default("") /// This is not a url to the avatar but more of a choice that's determined by the frontend
+  joinedAt  DateTime @default(now())
+
+  isVerified Boolean @default(false)
+  reputation Int     @default(0)
+
+  followersCount Int @default(0)
+  followingCount Int @default(0)
+
+
+  // Relations
+  profile Profile? @relation("UserProfile")
+
+  followers User[] @relation("UserFollowers", references: [id])
+  following User[] @relation("UserFollowers", references: [id])
+
+  discussions     Discussion[]     @relation("UserDiscussions")
+  discussionVotes DiscussionVote[] // Explicit m-n
+
+  discussionComments     DiscussionComment[]     @relation("UserDiscussionComments")
+  discussionCommentVotes DiscussionCommentVote[] // Explicit m-n
+
+  @@unique([provider, providerUid])
+}
+
+model Profile {
+  bio    String @default("")
+  locale Locale @default(ARABIC)
+
+  university Int
+  college    Int
+  year       Int
+
+  // Relations
+  userId Int  @id
+  user   User @relation("UserProfile", fields: [userId], references: [id])
+}
+
+model Discussion {
+  id Int @id @default(autoincrement())
+
+  body        String
+  attachments String[] /// list of urls of images, videoes, any other downloadable file e.g pdfs
+  createdAt   DateTime @default(now())
+
+  university Int
+  college    Int
+  year       Int
+
+  upvotesCount   Int @default(0)
+  downvotesCount Int @default(0)
+
+  // Relations
+  authorId Int
+  author   User @relation("UserDiscussions", fields: [authorId], references: [id])
+
+  tags String[]
+
+  comments DiscussionComment[] @relation("DiscussionComments")
+
+  votes DiscussionVote[]
+}
+
+model DiscussionComment {
+  id Int @id @default(autoincrement())
+
+  body        String
+  attachments String[]
+  createdAt   DateTime @default(now())
+
+  upvotesCount   Int @default(0)
+  downvotesCount Int @default(0)
+
+  // Relations
+  discussionId Int
+  discussion   Discussion @relation("DiscussionComments", fields: [discussionId], references: [id])
+
+  authorId Int
+  author   User @relation("UserDiscussionComments", fields: [authorId], references: [id])
+
+  votes DiscussionCommentVote[]
+
+  parentReplyId Int? // TODO I am not sure if this should be required
+  parentReply   DiscussionComment?  @relation("DiscussionCommentReplies", fields: [parentReplyId], references: [id])
+  replies       DiscussionComment[] @relation("DiscussionCommentReplies")
+}
+
+///////////////////////////////
+// Enums
+///////////////////////////////
+
+enum Provider {
+  GOOGLE
+}
+
+enum Locale {
+  ARABIC
+  ENGLISH
+}
+
+///////////////////////////////
+// Relation tables
+///////////////////////////////
+
+model DiscussionVote {
+  voter        User       @relation(fields: [voterId], references: [id])
+  voterId      Int
+  discussion   Discussion @relation(fields: [discussionId], references: [id])
+  discussionId Int
+
+  /// Takes true in case of upvote and false in case of downvote
+  upvoted Boolean
+
+  @@id([voterId, discussionId])
+}
+
+model DiscussionCommentVote {
+  voter     User              @relation(fields: [voterId], references: [id])
+  voterId   Int
+  comment   DiscussionComment @relation(fields: [commentId], references: [id])
+  commentId Int
+
+  /// Takes true in case of upvote and false in case of downvote
+  upvoted Boolean
+
+  @@id([voterId, commentId])
+}

@@ -1,7 +1,7 @@
 {
   "name": "social-learning-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Social Learning Backend",
   "author": "",
   "license": "ISC",
   "main": "api/app.ts",
@@ -9,10 +9,31 @@
     "dev": "ts-node-dev --transpile-only --no-notify api/app.ts",
     "build": "tsc"
   },
+  "dependencies": {
+    "@prisma/client": "^2.27.0",
+    "apollo-server-express": "^3.0.2",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "google-auth-library": "^7.3.0",
+    "graphql": "^15.5.1",
+    "jsonwebtoken": "^8.5.1",
+    "ms": "^2.1.3",
+    "nanoid": "^3.1.23",
+    "nexus": "^1.1.0",
+    "nexus-prisma": "^0.29.1",
+    "yup": "^0.32.9"
+  },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.2",
+    "@types/jsonwebtoken": "^8.5.4",
+    "@types/ms": "^0.7.31",
     "@types/node": "^16.4.0",
     "prettier": "^2.3.2",
+    "prisma": "^2.27.0",
     "ts-node-dev": "^1.1.8",
     "typescript": "^4.3.5"
   }
+
 }
