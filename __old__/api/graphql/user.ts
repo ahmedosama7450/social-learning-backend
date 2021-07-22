@@ -18,7 +18,7 @@ import {
   ProfileFromProvider,
 } from "../../lib/utils";
 import { isAuthenticated, ownUserOnlyAccess } from "../permissions";
-import * as keys from "../../lib/keys";
+import * as keys from "../../../lib/keys";
 import * as prefs from "../../lib/prefs";
 
 export const User = objectType({
@@ -135,9 +135,8 @@ export const UserMutation = mutationField((t) => {
       code: "String",
     },
     async resolve(_, args, { prisma, res }) {
-      let profileFromProvider: ProfileFromProvider = await fetchProfileFromGoogle(
-        args.code
-      );
+      let profileFromProvider: ProfileFromProvider =
+        await fetchProfileFromGoogle(args.code);
 
       let user = await prisma.user.findUnique({
         where: {

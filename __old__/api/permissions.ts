@@ -1,5 +1,5 @@
-import { User } from '.prisma/client';
-import { Context } from './context';
+import { User } from ".prisma/client";
+import { Context } from "../../api/context";
 
 // TODO typing parent and args with generics
 
