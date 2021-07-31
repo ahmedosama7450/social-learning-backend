@@ -6,9 +6,15 @@
 
 import type { Context as Context } from "./../api/context"
 import type { FieldAuthorizeResolver } from "nexus/dist/plugins/fieldAuthorizePlugin"
+import type { ValidateResolver, TransformResolver } from "E:\\Social Learning\\social-learning-backend\\lib\\validation-plugin\\validationPlugin"
 import type { core } from "nexus"
 declare global {
   interface NexusGenCustomInputMethods<TypeName extends string> {
+    /**
+     * The `BigInt` scalar type represents non-fractional signed whole numeric values.
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
+     */
+    bigInt<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "BigInt";
     /**
      * The `Byte` scalar type represents byte value as a Buffer
      */
@@ -18,6 +24,10 @@ declare global {
      */
     dateTime<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "DateTime";
     /**
+     * An arbitrary-precision Decimal type
+     */
+    decimal<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "Decimal";
+    /**
      * The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
      */
     json<FieldName extends string>(fieldName: FieldName, opts?: core.CommonInputFieldConfig<TypeName, FieldName>): void // "Json";
@@ -26,6 +36,11 @@ declare global {
 declare global {
   interface NexusGenCustomOutputMethods<TypeName extends string> {
     /**
+     * The `BigInt` scalar type represents non-fractional signed whole numeric values.
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
+     */
+    bigInt<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "BigInt";
+    /**
      * The `Byte` scalar type represents byte value as a Buffer
      */
     bytes<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "Bytes";
@@ -33,6 +48,10 @@ declare global {
      * A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
      */
     dateTime<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "DateTime";
+    /**
+     * An arbitrary-precision Decimal type
+     */
+    decimal<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "Decimal";
     /**
      * The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
      */
@@ -46,9 +65,22 @@ declare global {
 }
 
 export interface NexusGenInputs {
+  ProfileCreateInput: { // input type
+    avatar: string; // String!
+    bio: string; // String!
+    college: number; // Int!
+    firstName: string; // String!
+    lastName: string; // String!
+    locale: NexusGenEnums['Locale']; // Locale!
+    university: number; // Int!
+    username: string; // String!
+    year: number; // Int!
+  }
 }
 
 export interface NexusGenEnums {
+  Locale: "ARABIC" | "ENGLISH"
+  Provider: "GOOGLE"
 }
 
 export interface NexusGenScalars {
@@ -57,13 +89,42 @@ export interface NexusGenScalars {
   Float: number
   Boolean: boolean
   ID: string
+  BigInt: any
   Bytes: any
   DateTime: any
+  Decimal: any
   Json: any
 }
 
 export interface NexusGenObjects {
+  LoginResponse: { // root type
+    accessToken: string; // String!
+  }
+  Mutation: {};
+  Profile: { // root type
+    bio: string; // String!
+    college: number; // Int!
+    locale: NexusGenEnums['Locale']; // Locale!
+    university: number; // Int!
+    userId: number; // Int!
+    year: number; // Int!
+  }
   Query: {};
+  User: { // root type
+    avatar: string; // String!
+    email?: string | null; // String
+    firstName: string; // String!
+    followersCount: number; // Int!
+    followingCount: number; // Int!
+    id: number; // Int!
+    isActive: boolean; // Boolean!
+    isVerified: boolean; // Boolean!
+    joinedAt: NexusGenScalars['DateTime']; // DateTime!
+    lastName: string; // String!
+    provider: NexusGenEnums['Provider']; // Provider!
+    reputation: number; // Int!
+    username: string; // String!
+  }
 }
 
 export interface NexusGenInterfaces {
@@ -74,21 +135,94 @@ export interface NexusGenUnions {
 
 export type NexusGenRootTypes = NexusGenObjects
 
-export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars
+export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  LoginResponse: { // field return type
+    accessToken: string; // String!
+  }
+  Mutation: { // field return type
+    createProfile: NexusGenRootTypes['User']; // User!
+    loginWithProvider: NexusGenRootTypes['LoginResponse']; // LoginResponse!
+    logout: boolean; // Boolean!
+  }
+  Profile: { // field return type
+    bio: string; // String!
+    college: number; // Int!
+    locale: NexusGenEnums['Locale']; // Locale!
+    university: number; // Int!
+    userId: number; // Int!
+    year: number; // Int!
+  }
   Query: { // field return type
-    ok: boolean; // Boolean!
+    me: NexusGenRootTypes['User']; // User!
+  }
+  User: { // field return type
+    avatar: string; // String!
+    email: string | null; // String
+    firstName: string; // String!
+    followersCount: number; // Int!
+    followingCount: number; // Int!
+    id: number; // Int!
+    isActive: boolean; // Boolean!
+    isVerified: boolean; // Boolean!
+    joinedAt: NexusGenScalars['DateTime']; // DateTime!
+    lastName: string; // String!
+    profile: NexusGenRootTypes['Profile'] | null; // Profile
+    provider: NexusGenEnums['Provider']; // Provider!
+    reputation: number; // Int!
+    username: string; // String!
   }
 }
 
 export interface NexusGenFieldTypeNames {
+  LoginResponse: { // field return type name
+    accessToken: 'String'
+  }
+  Mutation: { // field return type name
+    createProfile: 'User'
+    loginWithProvider: 'LoginResponse'
+    logout: 'Boolean'
+  }
+  Profile: { // field return type name
+    bio: 'String'
+    college: 'Int'
+    locale: 'Locale'
+    university: 'Int'
+    userId: 'Int'
+    year: 'Int'
+  }
   Query: { // field return type name
-    ok: 'Boolean'
+    me: 'User'
+  }
+  User: { // field return type name
+    avatar: 'String'
+    email: 'String'
+    firstName: 'String'
+    followersCount: 'Int'
+    followingCount: 'Int'
+    id: 'Int'
+    isActive: 'Boolean'
+    isVerified: 'Boolean'
+    joinedAt: 'DateTime'
+    lastName: 'String'
+    profile: 'Profile'
+    provider: 'Provider'
+    reputation: 'Int'
+    username: 'String'
   }
 }
 
 export interface NexusGenArgTypes {
+  Mutation: {
+    createProfile: { // args
+      profileCreateInput: NexusGenInputs['ProfileCreateInput']; // ProfileCreateInput!
+    }
+    loginWithProvider: { // args
+      code: string; // String!
+      provider: NexusGenEnums['Provider']; // Provider!
+    }
+  }
 }
 
 export interface NexusGenAbstractTypeMembers {
@@ -99,9 +233,9 @@ export interface NexusGenTypeInterfaces {
 
 export type NexusGenObjectNames = keyof NexusGenObjects;
 
-export type NexusGenInputNames = never;
+export type NexusGenInputNames = keyof NexusGenInputs;
 
-export type NexusGenEnumNames = never;
+export type NexusGenEnumNames = keyof NexusGenEnums;
 
 export type NexusGenInterfaceNames = never;
 
@@ -163,6 +297,14 @@ declare global {
      * resolver from executing.
      */
     authorize?: FieldAuthorizeResolver<TypeName, FieldName>
+    /**
+     * Validation for arguments
+     */
+    validate?: ValidateResolver<TypeName, FieldName>
+    /**
+     * Transformation for arguments
+     */
+    transform?: TransformResolver<TypeName, FieldName>
   }
   interface NexusGenPluginInputFieldConfig<TypeName extends string, FieldName extends string> {
   }

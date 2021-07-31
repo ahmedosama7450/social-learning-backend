@@ -3,6 +3,7 @@ import { AuthenticationError } from "apollo-server-express";
 import { join } from "path";
 
 import * as types from "./graphql";
+import { validationPlugin } from "../lib/validation-plugin/validationPlugin";
 
 export default makeSchema({
   types,
@@ -12,6 +13,7 @@ export default makeSchema({
         return new AuthenticationError("Not authenticated or authorized");
       },
     }),
+    validationPlugin,
   ],
   nonNullDefaults: {
     input: true,
@@ -26,7 +28,7 @@ export default makeSchema({
     alias: "Context",
     export: "Context",
   },
-  // TODO Maybe don't have to define prisma source types because I am use the plugin
+  // TODO Maybe don't have to define prisma source types because I am using the plugin
   sourceTypes: {
     modules: [
       {

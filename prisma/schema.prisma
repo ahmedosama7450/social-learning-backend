@@ -19,8 +19,8 @@ model User {
   firstName   String
   lastName    String
 
-  isActive Boolean  @default(true) /// isActive is false if the user is banned
   email    String?
+  isActive Boolean  @default(true) /// isActive is false if the user is banned
   avatar   String   @default("") /// This is not a url to the avatar but more of a choice that's determined by the frontend
   joinedAt DateTime @default(now())
 

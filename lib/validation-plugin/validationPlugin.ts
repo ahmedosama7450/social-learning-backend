@@ -234,7 +234,7 @@ export function combineValidators<T>(validators: Validator<T>[]): Validator<T> {
       const validaitonResultOrPromise = validators[i](arg);
 
       if (isPromiseLike(validaitonResultOrPromise)) {
-        // Stop, We need to return a promise
+        // Now, We can return a promise
         return Promise.all(
           validators.reduce(
             (acc, currentValidator, curIndex) => {
