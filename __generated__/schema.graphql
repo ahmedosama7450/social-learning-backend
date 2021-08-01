@@ -19,6 +19,17 @@ scalar DateTime
 """An arbitrary-precision Decimal type"""
 scalar Decimal
 
+type EduOrgs {
+  colleges: Json!
+  tags: Json!
+  universities: Json!
+}
+
+type EduOrgsInfo {
+  eduOrgs: EduOrgs
+  version: Int!
+}
+
 """
 The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -77,6 +88,10 @@ enum Provider {
 }
 
 type Query {
+  """
+  cachedVersion is compared to the current version to decide if we need to send data back or not. the version is always sent back
+  """
+  eduOrgsInfo(cachedVersion: Int): EduOrgsInfo!
   me: User!
 }
 

@@ -97,6 +97,15 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  EduOrgs: { // root type
+    colleges: NexusGenScalars['Json']; // Json!
+    tags: NexusGenScalars['Json']; // Json!
+    universities: NexusGenScalars['Json']; // Json!
+  }
+  EduOrgsInfo: { // root type
+    eduOrgs?: NexusGenRootTypes['EduOrgs'] | null; // EduOrgs
+    version: number; // Int!
+  }
   LoginResponse: { // root type
     accessToken: string; // String!
   }
@@ -138,6 +147,15 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  EduOrgs: { // field return type
+    colleges: NexusGenScalars['Json']; // Json!
+    tags: NexusGenScalars['Json']; // Json!
+    universities: NexusGenScalars['Json']; // Json!
+  }
+  EduOrgsInfo: { // field return type
+    eduOrgs: NexusGenRootTypes['EduOrgs'] | null; // EduOrgs
+    version: number; // Int!
+  }
   LoginResponse: { // field return type
     accessToken: string; // String!
   }
@@ -155,6 +173,7 @@ export interface NexusGenFieldTypes {
     year: number; // Int!
   }
   Query: { // field return type
+    eduOrgsInfo: NexusGenRootTypes['EduOrgsInfo']; // EduOrgsInfo!
     me: NexusGenRootTypes['User']; // User!
   }
   User: { // field return type
@@ -176,6 +195,15 @@ export interface NexusGenFieldTypes {
 }
 
 export interface NexusGenFieldTypeNames {
+  EduOrgs: { // field return type name
+    colleges: 'Json'
+    tags: 'Json'
+    universities: 'Json'
+  }
+  EduOrgsInfo: { // field return type name
+    eduOrgs: 'EduOrgs'
+    version: 'Int'
+  }
   LoginResponse: { // field return type name
     accessToken: 'String'
   }
@@ -193,6 +221,7 @@ export interface NexusGenFieldTypeNames {
     year: 'Int'
   }
   Query: { // field return type name
+    eduOrgsInfo: 'EduOrgsInfo'
     me: 'User'
   }
   User: { // field return type name
@@ -221,6 +250,11 @@ export interface NexusGenArgTypes {
     loginWithProvider: { // args
       code: string; // String!
       provider: NexusGenEnums['Provider']; // Provider!
+    }
+  }
+  Query: {
+    eduOrgsInfo: { // args
+      cachedVersion?: number | null; // Int
     }
   }
 }
