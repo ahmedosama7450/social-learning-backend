@@ -18,7 +18,12 @@ async function startServer() {
   // Create express app with custom middleware
   const app = express();
   // TODO maybe use apollo cors, instead
-  app.use(cors({ credentials: true, origin: "*" })); // TODO Change origin back to http://localhost:3000 or whatever frontend domain is
+  app.use(
+    cors({
+      credentials: true,
+      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+    })
+  ); // TODO Change origin to whatever frontend domain is
   app.use(cookieParser());
 
   // Apply apollo server middleware
