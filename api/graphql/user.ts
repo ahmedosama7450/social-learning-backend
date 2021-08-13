@@ -17,7 +17,6 @@ import {
   fetchProfileFromGoogle,
   ProfileFromProvider,
   generateUsername,
-  isUsernameUnique,
   createAccessToken,
 } from "../../lib/authUtils";
 import { inProd } from "../../lib/utils";
@@ -193,13 +192,13 @@ export const UserMutation = mutationField((t) => {
       return {
         profileCreateInput: {
           firstName: trim,
-          lastNamse: trim,
+          lastName: trim,
           username: [trim, lowercase],
           bio: trim,
         },
       };
     },
-    validate(_, __, { prisma }) {
+    validate(_, __, { prisma, auth }) {
       return {
         profileCreateInput: {
           // TODO maybe restrict names with a regex
@@ -221,10 +220,22 @@ export const UserMutation = mutationField((t) => {
               prefs.usernamePrefs.maxLength
             ),
             pattern(prefs.usernamePrefs.regex),
-            async (value) => {
-              return (await isUsernameUnique(value, prisma))
-                ? undefined
-                : ["username-not-unique", null];
+            async (username) => {
+              const user = await prisma.user.findUnique({
+                where: {
+                  username,
+                },
+                select: {
+                  id: true,
+                },
+              });
+
+              if (!user || user.id === auth!.userId) {
+                // This username is unique, It's all his now
+                return undefined;
+              } else {
+                return ["username-not-unique", null];
+              }
             },
           ],
           bio: maxSize(prefs.bioMaxLength),

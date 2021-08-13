@@ -6,7 +6,7 @@
 
 import type { Context as Context } from "./../api/context"
 import type { FieldAuthorizeResolver } from "nexus/dist/plugins/fieldAuthorizePlugin"
-import type { ValidateResolver, TransformResolver } from "E:\\Social Learning\\social-learning-backend\\lib\\validation-plugin\\validationPlugin"
+import type { ValidateResolver, TransformResolver } from "E:\\Social Learning\\backend\\lib\\validation-plugin\\validationPlugin"
 import type { core } from "nexus"
 declare global {
   interface NexusGenCustomInputMethods<TypeName extends string> {

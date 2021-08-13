@@ -1,13 +1,13 @@
 import { MaybePromise } from "nexus/dist/core";
 
-import { Validator } from "./validationPlugin";
+import { ErrorValidationResultExtras, Validator } from "./validationPlugin";
 
-// TODO Maybe find a way to make sure that error codes are uniqe (e.g. make error code same as name as validator function)
+// TODO Maybe find a way to make sure that error codes are unique (e.g. make error code same as name as validator function)
 
 export function defineValidator<T>(
   errorCode: string,
   errorCondition: (arg: T) => MaybePromise<boolean>,
-  extras: any = null
+  extras: ErrorValidationResultExtras = null
 ): Validator<T> {
   return (arg) => {
     return errorCondition(arg) ? [errorCode, extras] : undefined;
@@ -19,10 +19,10 @@ export function defineValidator<T>(
 //===================================
 
 export const max = (n: number) =>
-  defineValidator<number>("max", (arg) => arg > n, n);
+  defineValidator<number>("max", (arg) => arg > n, { n });
 
 export const min = (n: number) =>
-  defineValidator<number>("min", (arg) => arg < n, n);
+  defineValidator<number>("min", (arg) => arg < n, { n });
 
 export const range = (lowerBound: number, upperBound: number) =>
   defineValidator<number>(
@@ -36,10 +36,10 @@ export const range = (lowerBound: number, upperBound: number) =>
 //===================================
 
 export const maxSize = (n: number) =>
-  defineValidator<[] | string>("max-size", (arg) => arg.length > n, n);
+  defineValidator<[] | string>("max-size", (arg) => arg.length > n, { n });
 
 export const minSize = (n: number) =>
-  defineValidator<[] | string>("min-size", (arg) => arg.length < n, n);
+  defineValidator<[] | string>("min-size", (arg) => arg.length < n, { n });
 
 export const rangeSize = (lowerBound: number, upperBound: number) =>
   defineValidator<[] | string>(
@@ -53,4 +53,6 @@ export const rangeSize = (lowerBound: number, upperBound: number) =>
 //===================================
 
 export const pattern = (regexp: RegExp) =>
-  defineValidator<string>("pattern", (arg) => !regexp.test(arg), regexp);
+  defineValidator<string>("pattern", (arg) => !regexp.test(arg), {
+    regexp: regexp.source,
+  });

@@ -11,7 +11,8 @@ import {
   isPromiseLike,
 } from "nexus/dist/core";
 import { join } from "path";
-import { UserInputError } from "apollo-server-express";
+import { ApolloError } from "apollo-server-express";
+import { assignObjectAt } from "./utils";
 
 //-------------------------------------------
 /* TODO
@@ -23,16 +24,23 @@ import { UserInputError } from "apollo-server-express";
      the errors. This means changing the ValidationResult type into something like ErrorValidationResult | ErrorValidationResult[] | undefined
      which has has some pitfalls e.g. the ability to discriminate between the union memebers
   5. Make a warning when user uses transform but there are no arguments defined, i.e. when you recieve an empty object of args ({})
-   
+  6. Make sure that the plugin doesn't return an empty validation errors object or undefined. This is assumed on the frontend
+  7. Simplify execute function using a traverseObject utility
+  8. validate function is not 100% type safe. It infers types correctly, but it doesn't raise an error for unkown keys (This is so important)
+
 */
 //-------------------------------------------
+
+export type ErrorValidationResultExtras = {
+  [key: string]: number | string | boolean;
+} | null;
 
 /**
  * First element represents errorCode
  *
  * Second element represents any extras related to validation
  */
-export type ErrorValidationResult = [string, any];
+export type ErrorValidationResult = [string, ErrorValidationResultExtras];
 
 /**
  * undefined means validation passed
@@ -44,7 +52,7 @@ export type Validator<T> = (arg: T) => MaybePromise<ValidationResult>;
 export type Transformer<T> = (arg: T) => MaybePromise<T>;
 
 /**
- * Could be validtor or transformer
+ * Could be a validator or transformer
  * T is arg type
  * R is what is return, It' ValidationResult in case of validators, T in case of transformers
  */
@@ -193,9 +201,13 @@ export const validationPlugin = plugin({
 
           return completeValue(errorsTreeOrPromise, (errorsTree) => {
             if (errorsTree) {
-              throw new UserInputError("validation", {
-                validationErrors: errorsTree,
-              });
+              throw new ApolloError(
+                "One or more arguments failed validation",
+                "VALIDATION_FAILED",
+                {
+                  validationErrors: errorsTree,
+                }
+              );
             } else {
               return next(root, transformedArgs, ctx, info);
             }
@@ -224,16 +236,16 @@ function applyTransforms(
   args: GeneralArgsValue,
   transformerTree: TransformerTree<"", "">
 ): MaybePromise<GeneralArgsValue> {
-  // Guarenteed not to be null because it takes same form as args which shouldn't be null;
+  // Guaranteed not to be null because it takes same form as args which shouldn't be null;
   return execute<unknown, unknown>(args, transformerTree, combineTransformers)!;
 }
 
 export function combineValidators<T>(validators: Validator<T>[]): Validator<T> {
   return (arg) => {
     for (let i = 0; i < validators.length; i++) {
-      const validaitonResultOrPromise = validators[i](arg);
+      const validationResultOrPromise = validators[i](arg);
 
-      if (isPromiseLike(validaitonResultOrPromise)) {
+      if (isPromiseLike(validationResultOrPromise)) {
         // Now, We can return a promise
         return Promise.all(
           validators.reduce(
@@ -244,7 +256,7 @@ export function combineValidators<T>(validators: Validator<T>[]): Validator<T> {
 
               return acc;
             },
-            [validaitonResultOrPromise] as MaybePromise<ValidationResult>[]
+            [validationResultOrPromise] as MaybePromise<ValidationResult>[]
           )
         ).then((validationResults) => {
           for (const validationResult of validationResults) {
@@ -255,8 +267,8 @@ export function combineValidators<T>(validators: Validator<T>[]): Validator<T> {
           return undefined;
         });
       } else {
-        if (validaitonResultOrPromise !== undefined) {
-          return validaitonResultOrPromise;
+        if (validationResultOrPromise !== undefined) {
+          return validationResultOrPromise;
         }
       }
     }
@@ -349,15 +361,11 @@ function execute<T, R>(
             maybeExecutionResultTree = {};
           }
 
-          const accessKey = asyncExecutorsAccessKeys[i];
-          const lastAccessKey = accessKey.length - 1;
-
-          let accessBranch = maybeExecutionResultTree;
-          for (let i = 0; i < lastAccessKey; i++) {
-            accessBranch = accessBranch[accessKey[i]];
-          }
-
-          accessBranch[accessKey[lastAccessKey]] = result;
+          assignObjectAt(
+            maybeExecutionResultTree,
+            asyncExecutorsAccessKeys[i],
+            result
+          );
         }
       }
 
@@ -410,7 +418,7 @@ function executeHelper<T, R>(
 
       if (isPromiseLike(resultOrPromise)) {
         asyncExecutors.push(resultOrPromise);
-        asyncExecutorsAccessKeys.push(accessKey);
+        asyncExecutorsAccessKeys.push([...accessKey]);
       } else {
         // We only ever need to do anything if resultAssignConditon is undefined or when it evaluates to true
         if (!resultAssignCondition || resultAssignCondition(resultOrPromise)) {

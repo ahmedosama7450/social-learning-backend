@@ -10,6 +10,7 @@ export default makeSchema({
   plugins: [
     fieldAuthorizePlugin({
       formatError() {
+        // TODO Maybe distinguish authentication from authorization errors by sending different codes
         return new AuthenticationError("Not authenticated or authorized");
       },
     }),
