@@ -24,7 +24,7 @@ export function createContext(
     //-------------------------------------------
     // Fake auth
     //-------------------------------------------
-    const fakeAuthUserId = 1; // To disable, Set fakeAuthUserId to null
+    const fakeAuthUserId = null; // To disable, Set fakeAuthUserId to null
 
     if (fakeAuthUserId) {
       return {

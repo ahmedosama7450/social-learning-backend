@@ -30,6 +30,11 @@ async function startServer() {
   const apolloServer = new ApolloServer({
     schema,
     context: createContext(prisma),
+    formatError(err) {
+      // TODO We still need more powerful logging
+      console.log(err);
+      return err;
+    },
   });
   await apolloServer.start();
   apolloServer.applyMiddleware({
