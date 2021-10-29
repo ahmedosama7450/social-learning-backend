@@ -19,6 +19,41 @@ scalar DateTime
 """An arbitrary-precision Decimal type"""
 scalar Decimal
 
+type Discussion {
+  author: User!
+  authorId: Int!
+  body: String!
+  college: Int!
+  commentsCount: Int!
+  createdAt: DateTime!
+  downvotesCount: Int!
+  id: Int!
+  tags: [String!]!
+  university: Int!
+  upvotesCount: Int!
+  year: Int!
+}
+
+type DiscussionConnection {
+  """
+  https://facebook.github.io/relay/graphql/connections.htm#sec-Edge-Types
+  """
+  edges: [DiscussionEdge!]!
+
+  """
+  https://facebook.github.io/relay/graphql/connections.htm#sec-undefined.PageInfo
+  """
+  pageInfo: PageInfo!
+}
+
+type DiscussionEdge {
+  """https://facebook.github.io/relay/graphql/connections.htm#sec-Cursor"""
+  cursor: String!
+
+  """https://facebook.github.io/relay/graphql/connections.htm#sec-Node"""
+  node: Discussion!
+}
+
 type EduOrgs {
   colleges: Json!
   tags: Json!
@@ -59,6 +94,31 @@ type Mutation {
   logout: Boolean!
 }
 
+"""
+PageInfo cursor, as defined in https://facebook.github.io/relay/graphql/connections.htm#sec-undefined.PageInfo
+"""
+type PageInfo {
+  """
+  The cursor corresponding to the last nodes in edges. Null if the connection is empty.
+  """
+  endCursor: String
+
+  """
+  Used to indicate whether more edges exist following the set defined by the clients arguments.
+  """
+  hasNextPage: Boolean!
+
+  """
+  Used to indicate whether more edges exist prior to the set defined by the clients arguments.
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  The cursor corresponding to the first nodes in edges. Null if the connection is empty.
+  """
+  startCursor: String
+}
+
 type Profile {
   bio: String!
   college: Int!
@@ -72,7 +132,7 @@ input ProfileCreateInput {
   """
   This is not a url to the avatar but more of a choice that's determined by the frontend
   """
-  avatar: String!
+  avatar: String
   bio: String!
   college: Int!
   firstName: String!
@@ -88,6 +148,20 @@ enum Provider {
 }
 
 type Query {
+  discussions(
+    """Returns the elements in the list that come after the specified cursor"""
+    after: String
+
+    """Returns the elements in the list that come before the specified cursor"""
+    before: String
+
+    """Returns the first n elements from the list."""
+    first: Int
+
+    """Returns the last n elements from the list."""
+    last: Int
+  ): DiscussionConnection!
+
   """
   cachedVersion is compared to the current version to decide if we need to send data back or not. the version is always sent back
   """
@@ -99,7 +173,7 @@ type User {
   """
   This is not a url to the avatar but more of a choice that's determined by the frontend
   """
-  avatar: String!
+  avatar: String
   email: String
   firstName: String!
   followersCount: Int!

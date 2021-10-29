@@ -20,8 +20,10 @@ model User {
   lastName    String
 
   email    String?
-  isActive Boolean  @default(true) /// isActive is false if the user is banned
-  avatar   String   @default("") /// This is not a url to the avatar but more of a choice that's determined by the frontend
+  /// isActive is false if the user is banned
+  isActive Boolean  @default(true) 
+  /// This is not a url to the avatar but more of a choice that's determined by the frontend
+  avatar   String?   
   joinedAt DateTime @default(now())
 
   isVerified Boolean @default(false)
@@ -72,6 +74,7 @@ model Discussion {
 
   upvotesCount   Int @default(0)
   downvotesCount Int @default(0)
+  commentsCount Int @default(0)
 
   // Relations
   authorId Int

@@ -6,8 +6,8 @@
 
 import type { Context as Context } from "./../api/context"
 import type { FieldAuthorizeResolver } from "nexus/dist/plugins/fieldAuthorizePlugin"
+import type { core, connectionPluginCore } from "nexus"
 import type { ValidateResolver, TransformResolver } from "E:\\social-learning-app\\backend\\lib\\validation-plugin\\validationPlugin"
-import type { core } from "nexus"
 declare global {
   interface NexusGenCustomInputMethods<TypeName extends string> {
     /**
@@ -56,6 +56,15 @@ declare global {
      * The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
      */
     json<FieldName extends string>(fieldName: FieldName, ...opts: core.ScalarOutSpread<TypeName, FieldName>): void // "Json";
+    /**
+     * Adds a Relay-style connection to the type, with numerous options for configuration
+     *
+     * @see https://nexusjs.org/docs/plugins/connection
+     */
+    connectionField<FieldName extends string>(
+      fieldName: FieldName,
+      config: connectionPluginCore.ConnectionFieldConfig<TypeName, FieldName>
+    ): void
   }
 }
 
@@ -66,7 +75,7 @@ declare global {
 
 export interface NexusGenInputs {
   ProfileCreateInput: { // input type
-    avatar: string; // String!
+    avatar?: string | null; // String
     bio: string; // String!
     college: number; // Int!
     firstName: string; // String!
@@ -97,6 +106,27 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
+  Discussion: { // root type
+    authorId: number; // Int!
+    body: string; // String!
+    college: number; // Int!
+    commentsCount: number; // Int!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    downvotesCount: number; // Int!
+    id: number; // Int!
+    tags: string[]; // [String!]!
+    university: number; // Int!
+    upvotesCount: number; // Int!
+    year: number; // Int!
+  }
+  DiscussionConnection: { // root type
+    edges: NexusGenRootTypes['DiscussionEdge'][]; // [DiscussionEdge!]!
+    pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
+  }
+  DiscussionEdge: { // root type
+    cursor: string; // String!
+    node: NexusGenRootTypes['Discussion']; // Discussion!
+  }
   EduOrgs: { // root type
     colleges: NexusGenScalars['Json']; // Json!
     tags: NexusGenScalars['Json']; // Json!
@@ -110,6 +140,12 @@ export interface NexusGenObjects {
     accessToken: string; // String!
   }
   Mutation: {};
+  PageInfo: { // root type
+    endCursor?: string | null; // String
+    hasNextPage: boolean; // Boolean!
+    hasPreviousPage: boolean; // Boolean!
+    startCursor?: string | null; // String
+  }
   Profile: { // root type
     bio: string; // String!
     college: number; // Int!
@@ -120,7 +156,7 @@ export interface NexusGenObjects {
   }
   Query: {};
   User: { // root type
-    avatar: string; // String!
+    avatar?: string | null; // String
     email?: string | null; // String
     firstName: string; // String!
     followersCount: number; // Int!
@@ -147,6 +183,28 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
+  Discussion: { // field return type
+    author: NexusGenRootTypes['User']; // User!
+    authorId: number; // Int!
+    body: string; // String!
+    college: number; // Int!
+    commentsCount: number; // Int!
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    downvotesCount: number; // Int!
+    id: number; // Int!
+    tags: string[]; // [String!]!
+    university: number; // Int!
+    upvotesCount: number; // Int!
+    year: number; // Int!
+  }
+  DiscussionConnection: { // field return type
+    edges: NexusGenRootTypes['DiscussionEdge'][]; // [DiscussionEdge!]!
+    pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
+  }
+  DiscussionEdge: { // field return type
+    cursor: string; // String!
+    node: NexusGenRootTypes['Discussion']; // Discussion!
+  }
   EduOrgs: { // field return type
     colleges: NexusGenScalars['Json']; // Json!
     tags: NexusGenScalars['Json']; // Json!
@@ -164,6 +222,12 @@ export interface NexusGenFieldTypes {
     loginWithProvider: NexusGenRootTypes['LoginResponse']; // LoginResponse!
     logout: boolean; // Boolean!
   }
+  PageInfo: { // field return type
+    endCursor: string | null; // String
+    hasNextPage: boolean; // Boolean!
+    hasPreviousPage: boolean; // Boolean!
+    startCursor: string | null; // String
+  }
   Profile: { // field return type
     bio: string; // String!
     college: number; // Int!
@@ -173,11 +237,12 @@ export interface NexusGenFieldTypes {
     year: number; // Int!
   }
   Query: { // field return type
+    discussions: NexusGenRootTypes['DiscussionConnection']; // DiscussionConnection!
     eduOrgsInfo: NexusGenRootTypes['EduOrgsInfo']; // EduOrgsInfo!
     me: NexusGenRootTypes['User']; // User!
   }
   User: { // field return type
-    avatar: string; // String!
+    avatar: string | null; // String
     email: string | null; // String
     firstName: string; // String!
     followersCount: number; // Int!
@@ -195,6 +260,28 @@ export interface NexusGenFieldTypes {
 }
 
 export interface NexusGenFieldTypeNames {
+  Discussion: { // field return type name
+    author: 'User'
+    authorId: 'Int'
+    body: 'String'
+    college: 'Int'
+    commentsCount: 'Int'
+    createdAt: 'DateTime'
+    downvotesCount: 'Int'
+    id: 'Int'
+    tags: 'String'
+    university: 'Int'
+    upvotesCount: 'Int'
+    year: 'Int'
+  }
+  DiscussionConnection: { // field return type name
+    edges: 'DiscussionEdge'
+    pageInfo: 'PageInfo'
+  }
+  DiscussionEdge: { // field return type name
+    cursor: 'String'
+    node: 'Discussion'
+  }
   EduOrgs: { // field return type name
     colleges: 'Json'
     tags: 'Json'
@@ -212,6 +299,12 @@ export interface NexusGenFieldTypeNames {
     loginWithProvider: 'LoginResponse'
     logout: 'Boolean'
   }
+  PageInfo: { // field return type name
+    endCursor: 'String'
+    hasNextPage: 'Boolean'
+    hasPreviousPage: 'Boolean'
+    startCursor: 'String'
+  }
   Profile: { // field return type name
     bio: 'String'
     college: 'Int'
@@ -221,6 +314,7 @@ export interface NexusGenFieldTypeNames {
     year: 'Int'
   }
   Query: { // field return type name
+    discussions: 'DiscussionConnection'
     eduOrgsInfo: 'EduOrgsInfo'
     me: 'User'
   }
@@ -253,6 +347,12 @@ export interface NexusGenArgTypes {
     }
   }
   Query: {
+    discussions: { // args
+      after?: string | null; // String
+      before?: string | null; // String
+      first?: number | null; // Int
+      last?: number | null; // Int
+    }
     eduOrgsInfo: { // args
       cachedVersion?: number | null; // Int
     }
@@ -331,6 +431,7 @@ declare global {
      * resolver from executing.
      */
     authorize?: FieldAuthorizeResolver<TypeName, FieldName>
+    
     /**
      * Validation for arguments
      */

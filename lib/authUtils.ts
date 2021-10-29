@@ -10,21 +10,21 @@ import { usernamePrefs } from "./prefs";
 import * as keys from "../lib/keys";
 
 /**
- * Preform JWT authentication assuming jwt is sent in a cookie
+ * Preform JWT authentication assuming jwt is sent in a cookie or in the authorization header
  */
 export function authenticate(req: Request): ContextAuth | undefined {
-  // TODO We might need to look up the cookie in the authorization header especially with mobile clients
-
   /*
     Note we don't make any database calls to verify that the user id exists in the database
     the user might be authenticated on a device but has removed his account on another device, so technically he shouldn't be authenticated
     but anyways, This will produce an error in resolvers, so I think It's kind of safe
-    TODO one sollution, is to provide a way to revoke access tokens
+    TODO one solution, is to provide a way to revoke access tokens
   */
 
   let userId: number | undefined = undefined;
 
-  const accessToken = req.cookies[keys.accessTokenCookie];
+  const accessToken =
+    req.cookies[keys.accessTokenCookie] || req.headers.authorization;
+
   if (accessToken) {
     // user might be authenticated
     try {
@@ -49,7 +49,7 @@ export function createAccessToken(userId: number, expiresIn: string): string {
   );
 }
 
-// TODO usename functions below need to be tested and probably refactored
+// TODO username functions below need to be tested and probably refactored
 
 /**
  * @param email You don't have to check if it's valid, this function accounts for that

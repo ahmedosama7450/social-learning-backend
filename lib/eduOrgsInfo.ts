@@ -1,8 +1,13 @@
-// TODO I am thinking aobut putting this data somewhere else e.g. a CDN or so
+// TODO I am thinking about putting this data somewhere else e.g. a CDN or so
+
+// TODO The data is not complete yet
+
+/**
+ *  Version should be manually increased when the info changes, so this data can be cached on the frontend
+ */
+export const eduOrgsInfoVersion = 1;
 
 export const EDU_ORGS_GENERAL_OPTION_VALUE = -1;
-
-export const eduOrgsInfoVersion = 1;
 
 //-------------------------------------------
 // Types
@@ -26,21 +31,19 @@ export enum TagType {
 }
 
 /**
- * Tags are very specific to the univeristy, college, year they're attached to. A tag
- * with cairo universiry and arts college is different from a tag with only cairo university
+ * Tags are very specific to the university, college, year they're attached to. A tag
+ * with cairo university and arts college is different from a tag with only cairo university
  *
  * eduOrg is the array of all possible combinations of its constituent arrays
  *
- * Leaving eduOrgs undefined is assumed to be {}
- * Leaving one of the constiuent arrays of eduOrgs undefined is assumed to be, e.g. universitiesIds: [-1]
  */
 export interface Tag {
   description: string;
   type: TagType;
   eduOrgs?: {
-    universitiesIds?: number[];
-    collegesIds?: number[];
-    years?: number[];
+    universitiesIds: number[];
+    collegesIds: number[];
+    years: number[];
   }[];
 }
 
@@ -77,13 +80,27 @@ export const colleges: Record<number, College> = {
   },
 };
 
-export const tags: Record<number, Tag> = {
+/**
+ * This is how I type the tags data here, but it gets converted to match Tag Interface above
+ * (Just automating and making it easy for myself)
+ */
+interface PreTransformedTag {
+  description: string;
+  type: TagType;
+  eduOrgs?: {
+    universitiesIds?: number | number[];
+    collegesIds?: number | number[];
+    years?: number | number[];
+  }[];
+}
+
+const preTransformedTags: Record<number, PreTransformedTag> = {
   1: {
     description: "Math",
     type: TagType.SUBJECT,
     eduOrgs: [
-      { universitiesIds: [1, 2], collegesIds: [3, 2], years: [1, 2, 3] },
-      { universitiesIds: [1], collegesIds: [1], years: [1] },
+      { universitiesIds: [1, 2], collegesIds: [3, 2], years: [2, 3] },
+      { universitiesIds: 1, collegesIds: 2, years: 1 },
     ],
   },
   2: {
@@ -94,13 +111,67 @@ export const tags: Record<number, Tag> = {
     description: "Electrical Dep",
     type: TagType.DEPARTMENT,
     eduOrgs: [
-      { universitiesIds: [2], collegesIds: [1], years: [0, 1, 2, 3, 4] },
-      { universitiesIds: [1], collegesIds: [1], years: [1] },
+      { universitiesIds: 2, collegesIds: 1, years: [0, 1, 2, 3, 4] },
+      { universitiesIds: 1, collegesIds: 2, years: 1 },
     ],
   },
   4: {
     description: "Electronics",
     type: TagType.SUBJECT,
-    eduOrgs: [{ collegesIds: [1] }],
+    eduOrgs: [
+      { collegesIds: 1 },
+      { universitiesIds: 1, collegesIds: 2, years: 1 },
+    ],
   },
 };
+
+export const tags = transformTags(preTransformedTags);
+
+//-------------------------------------------
+// Helpers
+//-------------------------------------------
+
+function transformTags(
+  preTransformedTags: Record<number, PreTransformedTag>
+): Record<number, Tag> {
+  const transformedTags: Record<number, Tag> = {};
+
+  Object.entries(preTransformedTags).forEach(([tagId, preTransformedTag]) => {
+    transformedTags[Number(tagId)] = {
+      type: preTransformedTag.type,
+      description: preTransformedTag.description,
+      eduOrgs: transformTagEduOrgs(preTransformedTag.eduOrgs),
+    };
+  });
+
+  return transformedTags;
+}
+
+function transformTagEduOrgs(
+  preTransformedEduOrgs: PreTransformedTag["eduOrgs"]
+): Tag["eduOrgs"] {
+  if (
+    preTransformedEduOrgs === undefined ||
+    preTransformedEduOrgs.length === 0
+  ) {
+    return undefined;
+  }
+
+  let transformedEduOrgs: NonNullable<Tag["eduOrgs"]> = [];
+
+  preTransformedEduOrgs.forEach((preTransformedEduOrg, i) => {
+    transformedEduOrgs[i] = {
+      universitiesIds: transformTagEduOrgPart(
+        preTransformedEduOrg.universitiesIds
+      ),
+      collegesIds: transformTagEduOrgPart(preTransformedEduOrg.collegesIds),
+      years: transformTagEduOrgPart(preTransformedEduOrg.years),
+    };
+  });
+
+  return transformedEduOrgs;
+}
+
+function transformTagEduOrgPart(part?: number | number[]): number[] {
+  return part === undefined ? [] : typeof part === "number" ? [part] : part;
+}
