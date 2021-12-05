@@ -4,6 +4,7 @@ import { OAuth2Client } from "google-auth-library";
 import { AuthenticationError, ApolloError } from "apollo-server-express";
 import { PrismaClient } from "@prisma/client";
 import { customAlphabet } from "nanoid";
+import { v4 as uuid } from "uuid";
 
 import { ContextAuth } from "../api/context";
 import { usernamePrefs } from "./prefs";
@@ -20,7 +21,7 @@ export function authenticate(req: Request): ContextAuth | undefined {
     TODO one solution, is to provide a way to revoke access tokens
   */
 
-  let userId: number | undefined = undefined;
+  let userId: string | undefined = undefined;
 
   const accessToken =
     req.cookies[keys.accessTokenCookie] || req.headers.authorization;
@@ -39,7 +40,7 @@ export function authenticate(req: Request): ContextAuth | undefined {
   return userId ? { userId } : undefined;
 }
 
-export function createAccessToken(userId: number, expiresIn: string): string {
+export function createAccessToken(userId: string, expiresIn: string): string {
   return sign(
     { [keys.accessTokenPayloadUserId]: userId },
     process.env.JWT_SECRET!,
@@ -49,14 +50,39 @@ export function createAccessToken(userId: number, expiresIn: string): string {
   );
 }
 
+/**
+ * This is not 100% guaranteed to be unique
+ * Anyways the database will throw if not unique
+ */
+export async function generateUserId(prisma: PrismaClient) {
+  let userId = uuid();
+
+  // Check only once that the id is available
+  if (
+    await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+      },
+    })
+  ) {
+    return uuid();
+  } else {
+    return userId;
+  }
+}
+
 // TODO username functions below need to be tested and probably refactored
 
 /**
  * @param email You don't have to check if it's valid, this function accounts for that
  */
 export async function generateUsername(
-  email: string | undefined,
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  email?: string | null,
+  name?: string | null
 ) {
   if (email) {
     // Tweak the email into a valid username
@@ -73,6 +99,9 @@ export async function generateUsername(
         return await generateRandomUsername(prisma);
       }
     }
+  } else if (name) {
+    // TODO Use name to generate username
+    throw new Error("Not implemented yet");
   } else {
     return await generateRandomUsername(prisma);
   }

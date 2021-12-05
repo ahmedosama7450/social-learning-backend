@@ -7,11 +7,11 @@
  */
 export const eduOrgsInfoVersion = 1;
 
-export const EDU_ORGS_GENERAL_OPTION_VALUE = -1;
-
 //-------------------------------------------
 // Types
 //-------------------------------------------
+
+export type EduOrgValue = number | null;
 
 export interface College {
   description: string;
@@ -31,19 +31,19 @@ export enum TagType {
 }
 
 /**
- * Tags are very specific to the university, college, year they're attached to. A tag
- * with cairo university and arts college is different from a tag with only cairo university
- *
- * eduOrg is the array of all possible combinations of its constituent arrays
+ * Tags are very specific to the university, college, year they're attached to.
+ * A tag with cairo university and arts college is different from a tag with only cairo university
+ * which means if we are to find the tags of cairo university, tags belonging to (arts-cairo) won't be accounted
  *
  */
 export interface Tag {
   description: string;
   type: TagType;
+  /** The array of all possible combinations of its constituent arrays (whose values should be unique) */
   eduOrgs?: {
-    universitiesIds: number[];
-    collegesIds: number[];
-    years: number[];
+    universitiesIds: Array<EduOrgValue>;
+    collegesIds: Array<EduOrgValue>;
+    years: Array<EduOrgValue>;
   }[];
 }
 
@@ -80,27 +80,13 @@ export const colleges: Record<number, College> = {
   },
 };
 
-/**
- * This is how I type the tags data here, but it gets converted to match Tag Interface above
- * (Just automating and making it easy for myself)
- */
-interface PreTransformedTag {
-  description: string;
-  type: TagType;
-  eduOrgs?: {
-    universitiesIds?: number | number[];
-    collegesIds?: number | number[];
-    years?: number | number[];
-  }[];
-}
-
-const preTransformedTags: Record<number, PreTransformedTag> = {
+export const tags: Record<number, Tag> = {
   1: {
     description: "Math",
     type: TagType.SUBJECT,
     eduOrgs: [
       { universitiesIds: [1, 2], collegesIds: [3, 2], years: [2, 3] },
-      { universitiesIds: 1, collegesIds: 2, years: 1 },
+      { universitiesIds: [1], collegesIds: [2], years: [1] },
     ],
   },
   2: {
@@ -111,25 +97,35 @@ const preTransformedTags: Record<number, PreTransformedTag> = {
     description: "Electrical Dep",
     type: TagType.DEPARTMENT,
     eduOrgs: [
-      { universitiesIds: 2, collegesIds: 1, years: [0, 1, 2, 3, 4] },
-      { universitiesIds: 1, collegesIds: 2, years: 1 },
+      { universitiesIds: [2], collegesIds: [1], years: [0, 1, 2, 3, 4] },
+      { universitiesIds: [1], collegesIds: [2], years: [1] },
     ],
   },
   4: {
     description: "Electronics",
     type: TagType.SUBJECT,
     eduOrgs: [
-      { collegesIds: 1 },
-      { universitiesIds: 1, collegesIds: 2, years: 1 },
+      { universitiesIds: [null], collegesIds: [1], years: [null] },
+      { universitiesIds: [1], collegesIds: [2], years: [1] },
     ],
   },
 };
 
-export const tags = transformTags(preTransformedTags);
+/**
+ // It turns out this is a lot of complexity we can avoid :)
 
-//-------------------------------------------
-// Helpers
-//-------------------------------------------
+ * This is how I type the tags data here, but it gets converted to match Tag Interface above
+ * (Just automating and making it easy for myself)
+ */
+/* interface PreTransformedTag {
+  description: string;
+  type: TagType;
+  eduOrgs?: {
+    universitiesIds?: number | number[];
+    collegesIds?: number | number[];
+    years?: number | number[];
+  }[];
+}
 
 function transformTags(
   preTransformedTags: Record<number, PreTransformedTag>
@@ -175,3 +171,4 @@ function transformTagEduOrgs(
 function transformTagEduOrgPart(part?: number | number[]): number[] {
   return part === undefined ? [] : typeof part === "number" ? [part] : part;
 }
+ */

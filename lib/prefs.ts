@@ -13,3 +13,8 @@ export const firstLastNamePrefs = {
 };
 
 export const bioMaxLength = 80;
+
+export const postTitlePrefs = {
+  minLength: 20,
+  maxLength: 300,
+};

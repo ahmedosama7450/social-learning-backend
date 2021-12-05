@@ -10,11 +10,12 @@ import { createContext } from "./context";
 
 config(); // TODO do I need this in production ?
 
-const prisma = new PrismaClient({
-  log: ["error", "warn"],
-});
-
 async function startServer() {
+  // Setup prisma client and prisma middleware
+  const prisma = new PrismaClient({
+    log: ["error", "warn", "query"],
+  });
+
   // Create express app with custom middleware
   const app = express();
   // TODO maybe use apollo cors, instead

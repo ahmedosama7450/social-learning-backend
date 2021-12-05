@@ -6,7 +6,7 @@ import { ExpressContext } from "apollo-server-express/dist/ApolloServer";
 import { authenticate } from "../lib/authUtils";
 
 export interface ContextAuth {
-  userId: number;
+  userId: string;
 }
 
 export interface Context {
@@ -14,6 +14,7 @@ export interface Context {
   res: Response;
   prisma: PrismaClient;
   auth?: ContextAuth;
+  computed?: Record<string, unknown>;
 }
 
 export function createContext(

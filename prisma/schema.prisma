@@ -1,40 +1,50 @@
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
 }
 
 generator nexusPrisma {
   provider = "nexus-prisma"
 }
 
-model User {
-  id          Int      @id @default(autoincrement())
+model TempUserInfo {
+  id String @id
+
   provider    Provider
-  providerUid String
-  username    String   @unique
-  firstName   String
-  lastName    String
+  providerUid String   @db.VarChar(320)
 
-  email    String?
-  /// isActive is false if the user is banned
-  isActive Boolean  @default(true)
-  /// This is not a url to the avatar but more of a choice that's determined by the frontend
-  avatar   String?
-  joinedAt DateTime @default(now())
+  firstName String  @db.VarChar(20)
+  lastName  String  @db.VarChar(20)
+  email     String? @db.VarChar(320)
+}
 
-  isVerified Boolean @default(false)
-  reputation Int     @default(0) //TODO maybe you should start with a value greater than zero
+model User {
+  id      String  @id
+  profile Profile @relation("UserProfile", fields: [id], references: [id])
 
-  // Counters
-  followersCount Int @default(0)
-  followingCount Int @default(0)
+  // Required
+  provider    Provider
+  providerUid String   @db.VarChar(320)
+  username    String   @unique @db.VarChar(20)
+
+  firstName String @db.VarChar(20)
+  lastName  String @db.VarChar(20)
+
+  // Optional
+  avatar String? @db.VarChar(20) /// This is not a url to the avatar but more of an id of a choice that's determined by the frontend
+
+  joinedAt  DateTime  @default(now())
+  deletedAt DateTime?
+
+  reputation Int @default(0) @db.UnsignedInt
 
   // Relations
-  profile  Profile?  @relation("UserProfile")
   posts    Post[]    @relation("UserPosts")
   comments Comment[] @relation("UserComments")
 
@@ -48,112 +58,188 @@ model User {
   postsShares   PostShare[]
   commentsVotes CommentVote[]
 
-  @@unique([provider, providerUid])
+  // Counters
+  followersCount Int @default(0)
+  followingCount Int @default(0)
+
+  @@unique([provider, providerUid], name: "providerInfo")
 }
 
 model Profile {
-  userId Int  @id
-  user   User @relation("UserProfile", fields: [userId], references: [id])
+  id String @id
 
-  bio    String @default("")
-  locale Locale @default(ARABIC)
+  // Required
+  university Int? @db.SmallInt
+  college    Int? @db.SmallInt
+  year       Int? @db.SmallInt
 
-  university Int
-  college    Int
-  year       Int
+  locale Locale
+
+  // Optional
+  bio String @default("") @db.VarChar(300)
+
+  // Relations
+  user User? @relation("UserProfile") //TODO What happens to Profile if User is deleted ??
 }
 
 model Post {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
 
-  authorId Int
-  author   User @relation("UserPosts", fields: [authorId], references: [id])
 
-  title       String
-  body        String?
-  attachments Json /// list of urls of images, videoes, any other downloadable file e.g pdfs
+  // Required
+  type PostType
 
-  createdAt DateTime @default(now())
+  authorId String
+  author   User   @relation("UserPosts", fields: [authorId], references: [id])
 
-  university Int
-  college    Int
-  year       Int
+  title String @db.VarChar(300)
+  body  String @db.Text
+
+  university Int? @db.SmallInt
+  college    Int? @db.SmallInt
+  year       Int? @db.SmallInt
   tags       Json
 
-  // Counters
-  upvotesCount   Int @default(0)
-  downvotesCount Int @default(0)
-  viewsCount     Int @default(0)
-  sharesCount    Int @default(0)
-  commentsCount  Int @default(0)
+  // Optional
+  createdAt DateTime @default(now())
+
+  deletedAt DateTime?
+
+  attachments Json? /// list of urls of images, videoes, any other downloadable file e.g pdfs (Only available for discussion posts)
+
+  coverUrl String?
+
+  acceptedAnswerId String?  @unique
+  acceptedAnswer   Comment? @relation("QuestionAcceptedAnswer", fields: [acceptedAnswerId], references: [id])
 
   // Relations
-  discussion Discussion? @relation("DiscussionPost")
-  question   Question?   @relation("QuestionPost")
-  article    Article?    @relation("ArticlePost")
-
   comments Comment[] @relation("PostComments")
+
+  answers Comment[] @relation("QuestionAnswers")
+
+  edits PostEdit[] @relation("PostEdit")
 
   // Explicit m-n realtions
   votes  PostVote[]
   views  PostView[]
   shares PostShare[]
+
+  // Counters
+  votesCount     Int @default(0) /// upvotesCount - downvotesCount
+  upvotesCount   Int @default(0) @db.UnsignedInt
+  downvotesCount Int @default(0) @db.UnsignedInt
+
+  viewsCount  Int @default(0) @db.UnsignedInt
+  sharesCount Int @default(0) @db.UnsignedInt
+
+  commentsCount Int @default(0) @db.UnsignedInt
+
+  answersCount Int? @db.UnsignedInt
+
+  ranking Int @default(0) @db.UnsignedInt
 }
 
-model Discussion {
-  id Int @id @default(autoincrement())
+model PostEdit {
+  id String @id @default(uuid())
 
-  postId Int  @unique
-  post   Post @relation("DiscussionPost", fields: [postId], references: [id])
+  // Required
+  postId String
+  post   Post   @relation("PostEdit", fields: [postId], references: [id])
+
+  // Optional
+  title       String? @db.VarChar(300) /// Null means no change
+  body        String? @db.Text /// Null means no change  
+  attachments Json? /// DbNull means no change or type of post is not discussion. However, JsonNull referes to a change.
+  coverUrl    String? // Null means no change or type of post is not article
+
+  editedAt DateTime @default(now())
 }
 
-model Question {
-  id Int @id @default(autoincrement())
+// Relations
+// discussion Discussion? @relation("DiscussionPost")
+// question   Question?   @relation("QuestionPost")
+// article    Article?    @relation("ArticlePost")
 
-  postId Int  @unique
-  post   Post @relation("QuestionPost", fields: [postId], references: [id])
+// model Discussion {
+//   id   String @id
+//   post Post   @relation("DiscussionPost", fields: [id], references: [id])
+// }
+//
+// model Question {
+//   id   String @id
+//   post Post   @relation("QuestionPost", fields: [id], references: [id])
 
-  answers Answer[] @relation("QuestionAnswers")
-}
+// }
+//
+// model Article {
+//   id   String @id
+//   post Post   @relation("ArticlePost", fields: [id], references: [id])
+// }
 
-model Answer {
-  id Int @id @default(autoincrement())
-
-  question   Question @relation("QuestionAnswers", fields: [questionId], references: [id])
-  questionId Int
-}
-
-model Article {
-  id Int @id @default(autoincrement())
-
-  postId Int  @unique
-  post   Post @relation("ArticlePost", fields: [postId], references: [id])
-}
+// model Answer {
+//   id Int @id @default(autoincrement())
+//
+//   question   Question @relation("QuestionAnswers", fields: [questionId], references: [id])
+//   questionId Int
+// }
 
 model Comment {
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
 
-  authorId Int
-  author   User @relation("UserComments", fields: [authorId], references: [id])
+  // Required
+  authorId String
+  author   User   @relation("UserComments", fields: [authorId], references: [id])
 
-  postId Int
-  post   Post @relation("PostComments", fields: [postId], references: [id])
+  postId String
+  post   Post   @relation("PostComments", fields: [postId], references: [id])
 
-  parentReplyId Int? // TODO I am not sure if this should be required
+  body        String @db.Text
+  attachments Json
+
+  // Optional
+  parentReplyId String? // TODO I am not sure if this should be required
   parentReply   Comment?  @relation("CommentReplies", fields: [parentReplyId], references: [id])
   replies       Comment[] @relation("CommentReplies")
 
-  body        String
-  attachments Json
-
   createdAt DateTime @default(now())
 
-  // Counters
-  upvotesCount   Int @default(0)
-  downvotesCount Int @default(0)
+  deletedAt DateTime?
+
+  // Relations
+
+  edits CommentEdit[] @relation("CommentEdit")
 
   // Explicit m-n Relations
   votes CommentVote[]
+
+  // Counters
+  votesCount     Int @default(0) /// upvotesCount - downvotesCount
+  upvotesCount   Int @default(0) @db.UnsignedInt
+  downvotesCount Int @default(0) @db.UnsignedInt
+
+  repliesCount Int @default(0) @db.UnsignedInt
+
+  ranking Int @default(0) @db.UnsignedInt
+
+  // As answer
+  questionId String? // TODO postId and questionId refer to the same string
+  question   Post?   @relation("QuestionAnswers", fields: [questionId], references: [id])
+
+  accepetedAnswerTo Post? @relation("QuestionAcceptedAnswer")
+}
+
+model CommentEdit {
+  id String @id @default(uuid())
+
+  // Required
+  commentId String
+  comment   Comment @relation("CommentEdit", fields: [commentId], references: [id])
+
+  // Optional
+  body        String? @db.Text /// Null means no change  
+  attachments Json? /// DbNull means no change. However, JsonNull referes to a change.
+
+  editedAt DateTime @default(now())
 }
 
 //=================================
@@ -169,18 +255,23 @@ enum Locale {
   ENGLISH
 }
 
+enum PostType {
+  DISCUSSION
+  QUESTION
+  ARTICLE
+}
+
 //=================================
 // Relation tables
 //=================================
 
 model PostVote {
-  voter   User @relation(fields: [voterId], references: [id])
-  voterId Int
+  voterId String
+  voter   User   @relation(fields: [voterId], references: [id])
 
-  post   Post @relation(fields: [postId], references: [id])
-  postId Int
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
 
-  /// Takes true in case of upvote and false in case of downvote
   at      DateTime @default(now())
   upvoted Boolean
 
@@ -188,13 +279,12 @@ model PostVote {
 }
 
 model CommentVote {
-  voter   User @relation(fields: [voterId], references: [id])
-  voterId Int
+  voterId String
+  voter   User   @relation(fields: [voterId], references: [id])
 
+  commentId String
   comment   Comment @relation(fields: [commentId], references: [id])
-  commentId Int
 
-  /// Takes true in case of upvote and false in case of downvote
   at      DateTime @default(now())
   upvoted Boolean
 
@@ -202,11 +292,11 @@ model CommentVote {
 }
 
 model PostView {
-  viewer   User @relation(fields: [viewerId], references: [id])
-  viewerId Int
+  viewerId String
+  viewer   User   @relation(fields: [viewerId], references: [id])
 
-  post   Post @relation(fields: [postId], references: [id])
-  postId Int
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
 
   at DateTime @default(now())
 
@@ -214,11 +304,11 @@ model PostView {
 }
 
 model PostShare {
-  sharing   User @relation(fields: [sharingId], references: [id])
-  sharingId Int
+  sharingId String
+  sharing   User   @relation(fields: [sharingId], references: [id])
 
-  post   Post @relation(fields: [postId], references: [id])
-  postId Int
+  postId String
+  post   Post   @relation(fields: [postId], references: [id])
 
   at DateTime @default(now())
 

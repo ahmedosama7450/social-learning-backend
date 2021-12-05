@@ -19,7 +19,7 @@ import { assignObjectAt } from "./utils";
   List of things to improve:
   1. Allow customization of the error thrown
   2. Accept recursive arrays of validators and transformers
-  3. We need to cache validate and transform functions or provide variations of them for when root, args, context,... are not needed
+  3. (IMPORTANT) We need to cache validate and transform functions or provide variations of them for when root, args, context,... are not needed
   4. When validating an array of validators, we return only the first validation error we get. Maybe allow customizing this to return all
      the errors. This means changing the ValidationResult type into something like ErrorValidationResult | ErrorValidationResult[] | undefined
      which has has some pitfalls e.g. the ability to discriminate between the union memebers
@@ -27,7 +27,7 @@ import { assignObjectAt } from "./utils";
   6. Make sure that the plugin doesn't return an empty validation errors object or undefined. This is assumed on the frontend
   7. Simplify execute function using a traverseObject utility
   8. validate function is not 100% type safe. It infers types correctly, but it doesn't raise an error for unkown keys (This is so important)
-
+  9. Validate and transform for all fields at once
 */
 //-------------------------------------------
 
@@ -131,35 +131,38 @@ export type TransformResolver<
   info: GraphQLResolveInfo
 ) => TransformerTree<TypeName, FieldName>;
 
-const ValidateResolverImport = printedGenTypingImport({
-  module: join(__dirname, "./validationPlugin"),
-  bindings: ["ValidateResolver"],
-});
-
-const TransformResolverImport = printedGenTypingImport({
-  module: join(__dirname, "./validationPlugin"),
-  bindings: ["TransformResolver"],
-});
-
 export const validationPlugin = plugin({
   name: "ValidationPlugin",
+
   description: "Plugin for validation and transformation of arguments",
+
   fieldDefTypes: [
     printedGenTyping({
       optional: true,
       name: "validate",
       description: "Validation for arguments",
       type: "ValidateResolver<TypeName, FieldName>",
-      imports: [ValidateResolverImport],
+      imports: [
+        printedGenTypingImport({
+          module: join(__dirname, "./validationPlugin"),
+          bindings: ["ValidateResolver"],
+        }),
+      ],
     }),
     printedGenTyping({
       optional: true,
       name: "transform",
       description: "Transformation for arguments",
       type: "TransformResolver<TypeName, FieldName>",
-      imports: [TransformResolverImport],
+      imports: [
+        printedGenTypingImport({
+          module: join(__dirname, "./validationPlugin"),
+          bindings: ["TransformResolver"],
+        }),
+      ],
     }),
   ],
+
   onCreateFieldResolver(config) {
     const validate = config.fieldConfig.extensions?.nexus?.config.validate;
     const transform = config.fieldConfig.extensions?.nexus?.config.transform;

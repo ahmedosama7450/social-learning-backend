@@ -1,13 +1,15 @@
-import { makeSchema, fieldAuthorizePlugin } from "nexus";
+import { makeSchema, fieldAuthorizePlugin, connectionPlugin } from "nexus";
 import { AuthenticationError } from "apollo-server-express";
 import { join } from "path";
 
 import * as types from "./graphql";
 import { validationPlugin } from "../lib/validation-plugin/validationPlugin";
+import { computePlugin } from "../lib/computePlugin";
 
 export default makeSchema({
   types,
   plugins: [
+    computePlugin,
     fieldAuthorizePlugin({
       formatError() {
         // TODO Maybe distinguish authentication from authorization errors by sending different codes
@@ -15,6 +17,9 @@ export default makeSchema({
       },
     }),
     validationPlugin,
+    connectionPlugin({
+      includeNodesField: true,
+    }),
   ],
   nonNullDefaults: {
     input: true,
