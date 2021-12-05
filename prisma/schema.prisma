@@ -19,16 +19,17 @@ model TempUserInfo {
   provider    Provider
   providerUid String   @db.VarChar(320)
 
-  firstName String  @db.VarChar(20)
-  lastName  String  @db.VarChar(20)
-  email     String? @db.VarChar(320)
+  firstName String @db.VarChar(20)
+  lastName  String @db.VarChar(20)
+
+  // Optional
+  email String? @db.VarChar(320)
 }
 
 model User {
   id      String  @id
   profile Profile @relation("UserProfile", fields: [id], references: [id])
 
-  // Required
   provider    Provider
   providerUid String   @db.VarChar(320)
   username    String   @unique @db.VarChar(20)
@@ -44,7 +45,18 @@ model User {
 
   reputation Int @default(0) @db.UnsignedInt
 
-  // Relations
+  // Counters
+  followersCount Int @default(0) @db.UnsignedInt
+  followingCount Int @default(0) @db.UnsignedInt
+
+  discussionsCount Int @default(0) @db.UnsignedInt
+  questionsCount   Int @default(0) @db.UnsignedInt
+  articlesCount    Int @default(0) @db.UnsignedInt
+
+  commentsCount Int @default(0) @db.UnsignedInt
+  answersCount  Int @default(0) @db.UnsignedInt
+
+  // 1-m Relations
   posts    Post[]    @relation("UserPosts")
   comments Comment[] @relation("UserComments")
 
@@ -58,35 +70,28 @@ model User {
   postsShares   PostShare[]
   commentsVotes CommentVote[]
 
-  // Counters
-  followersCount Int @default(0)
-  followingCount Int @default(0)
-
   @@unique([provider, providerUid], name: "providerInfo")
 }
 
 model Profile {
   id String @id
 
-  // Required
-  university Int? @db.SmallInt
-  college    Int? @db.SmallInt
-  year       Int? @db.SmallInt
-
   locale Locale
 
   // Optional
   bio String @default("") @db.VarChar(300)
 
-  // Relations
+  university Int? @db.SmallInt
+  college    Int? @db.SmallInt
+  year       Int? @db.SmallInt
+
+  // 1-1 relations
   user User? @relation("UserProfile") //TODO What happens to Profile if User is deleted ??
 }
 
 model Post {
   id String @id @default(uuid())
 
-
-  // Required
   type PostType
 
   authorId String
@@ -95,21 +100,19 @@ model Post {
   title String @db.VarChar(300)
   body  String @db.Text
 
+  // Optional
   university Int? @db.SmallInt
   college    Int? @db.SmallInt
   year       Int? @db.SmallInt
   tags       Json
 
-  // Optional
-  createdAt DateTime @default(now())
-
+  createdAt DateTime  @default(now())
   deletedAt DateTime?
 
   attachments Json? /// list of urls of images, videoes, any other downloadable file e.g pdfs (Only available for discussion posts)
+  coverUrl    String? // Only available for article posts
 
-  coverUrl String?
-
-  acceptedAnswerId String?  @unique
+  acceptedAnswerId String?  @unique // Only available for question posts
   acceptedAnswer   Comment? @relation("QuestionAcceptedAnswer", fields: [acceptedAnswerId], references: [id])
 
   // Relations
