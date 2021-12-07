@@ -12,7 +12,7 @@ export default makeSchema({
     computePlugin,
     fieldAuthorizePlugin({
       formatError() {
-        // TODO Maybe distinguish authentication from authorization errors by sending different codes
+        // Throw an apollo error with a code, if you want to customize the error thrown
         return new AuthenticationError("Not authenticated or authorized");
       },
     }),

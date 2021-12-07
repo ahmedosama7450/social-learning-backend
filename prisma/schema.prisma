@@ -14,7 +14,7 @@ generator nexusPrisma {
 }
 
 model TempUserInfo {
-  id String @id
+  id String @id @default(uuid())
 
   provider    Provider
   providerUid String   @db.VarChar(320)
@@ -24,6 +24,8 @@ model TempUserInfo {
 
   // Optional
   email String? @db.VarChar(320)
+
+  @@unique([provider, providerUid], name: "providerInfo")
 }
 
 model User {
@@ -74,16 +76,16 @@ model User {
 }
 
 model Profile {
-  id String @id
+  id String @id @default(uuid())
 
   locale Locale
 
   // Optional
   bio String @default("") @db.VarChar(300)
 
-  university Int? @db.SmallInt
-  college    Int? @db.SmallInt
-  year       Int? @db.SmallInt
+  universityId Int? @db.SmallInt
+  collegeId    Int? @db.SmallInt
+  year         Int? @db.SmallInt
 
   // 1-1 relations
   user User? @relation("UserProfile") //TODO What happens to Profile if User is deleted ??
@@ -101,10 +103,10 @@ model Post {
   body  String @db.Text
 
   // Optional
-  university Int? @db.SmallInt
-  college    Int? @db.SmallInt
-  year       Int? @db.SmallInt
-  tags       Json
+  universityId Int? @db.SmallInt
+  collegeId    Int? @db.SmallInt
+  year         Int? @db.SmallInt
+  tagsIds      Json
 
   createdAt DateTime  @default(now())
   deletedAt DateTime?
@@ -115,7 +117,7 @@ model Post {
   acceptedAnswerId String?  @unique // Only available for question posts
   acceptedAnswer   Comment? @relation("QuestionAcceptedAnswer", fields: [acceptedAnswerId], references: [id])
 
-  // Relations
+  // 1-n relations
   comments Comment[] @relation("PostComments")
 
   answers Comment[] @relation("QuestionAnswers")
@@ -128,7 +130,7 @@ model Post {
   shares PostShare[]
 
   // Counters
-  votesCount     Int @default(0) /// upvotesCount - downvotesCount
+  votesCount     Int @default(0) @db.UnsignedInt
   upvotesCount   Int @default(0) @db.UnsignedInt
   downvotesCount Int @default(0) @db.UnsignedInt
 
@@ -145,7 +147,6 @@ model Post {
 model PostEdit {
   id String @id @default(uuid())
 
-  // Required
   postId String
   post   Post   @relation("PostEdit", fields: [postId], references: [id])
 
@@ -189,7 +190,6 @@ model PostEdit {
 model Comment {
   id String @id @default(uuid())
 
-  // Required
   authorId String
   author   User   @relation("UserComments", fields: [authorId], references: [id])
 
@@ -216,7 +216,7 @@ model Comment {
   votes CommentVote[]
 
   // Counters
-  votesCount     Int @default(0) /// upvotesCount - downvotesCount
+  votesCount     Int @default(0) @db.UnsignedInt
   upvotesCount   Int @default(0) @db.UnsignedInt
   downvotesCount Int @default(0) @db.UnsignedInt
 
@@ -234,7 +234,6 @@ model Comment {
 model CommentEdit {
   id String @id @default(uuid())
 
-  // Required
   commentId String
   comment   Comment @relation("CommentEdit", fields: [commentId], references: [id])
 

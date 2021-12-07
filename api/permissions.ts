@@ -1,6 +1,7 @@
 // TODO Maybe make your own authentication plugin if things didn't scale well with the built-in fieldAuthorize plugin
 
 import { Post, Comment } from "@prisma/client";
+import { ApolloError } from "apollo-server-errors";
 import { GraphQLResolveInfo } from "graphql";
 import { isPromiseLike, MaybePromise } from "nexus/dist/core";
 
@@ -89,7 +90,19 @@ export const or: <RootType, ArgsType>(
 //===================================
 
 export const isAuthenticated: Permission = (_, __, ctx) => {
-  return !!ctx.auth;
+  if (ctx.auth) {
+    if (ctx.auth.isNewUser) throw new ApolloError("NEW_USER");
+    return true;
+  }
+  return false;
+};
+
+export const isNewUser: Permission = (_, __, ctx) => {
+  if (ctx.auth) {
+    if (!ctx.auth.isNewUser) throw new ApolloError("EXISTING_USER");
+    return true;
+  }
+  return false;
 };
 
 // TODO ownUser general permission ??

@@ -1,14 +1,15 @@
-import { Request } from "express";
+import { Request, Response } from "express";
 import { verify, sign } from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import { AuthenticationError, ApolloError } from "apollo-server-express";
 import { PrismaClient } from "@prisma/client";
 import { customAlphabet } from "nanoid";
-import { v4 as uuid } from "uuid";
+import ms from "ms";
 
 import { ContextAuth } from "../api/context";
-import { usernamePrefs } from "./prefs";
+import { usernamePrefs, accessTokenMaxAge } from "./prefs";
 import * as keys from "../lib/keys";
+import { inProd } from "./utils";
 
 /**
  * Preform JWT authentication assuming jwt is sent in a cookie or in the authorization header
@@ -21,8 +22,6 @@ export function authenticate(req: Request): ContextAuth | undefined {
     TODO one solution, is to provide a way to revoke access tokens
   */
 
-  let userId: string | undefined = undefined;
-
   const accessToken =
     req.cookies[keys.accessTokenCookie] || req.headers.authorization;
 
@@ -30,48 +29,55 @@ export function authenticate(req: Request): ContextAuth | undefined {
     // user might be authenticated
     try {
       const payload: any = verify(accessToken, process.env.JWT_SECRET!);
-      userId = payload[keys.accessTokenPayloadUserId];
+
+      const userId = payload[keys.accessTokenPayloadUserId];
+
+      if (userId) {
+        return { userId, isNewUser: payload[keys.accessTokenPayloadIsNewUser] };
+      }
     } catch (err) {
       // jwt is probably tempered with or is expired
-      userId = undefined;
+      return undefined;
     }
   }
 
-  return userId ? { userId } : undefined;
+  return undefined;
 }
 
-export function createAccessToken(userId: string, expiresIn: string): string {
-  return sign(
-    { [keys.accessTokenPayloadUserId]: userId },
-    process.env.JWT_SECRET!,
-    {
-      expiresIn,
-    }
-  );
-}
+export function createAccessToken(
+  userId: string,
+  isNewUser: boolean,
+  expiresIn: string
+): string {
+  const payload: any = { [keys.accessTokenPayloadUserId]: userId };
 
-/**
- * This is not 100% guaranteed to be unique
- * Anyways the database will throw if not unique
- */
-export async function generateUserId(prisma: PrismaClient) {
-  let userId = uuid();
-
-  // Check only once that the id is available
-  if (
-    await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        id: true,
-      },
-    })
-  ) {
-    return uuid();
-  } else {
-    return userId;
+  if (isNewUser) {
+    payload[keys.accessTokenPayloadIsNewUser] = true;
   }
+
+  return sign(payload, process.env.JWT_SECRET!, {
+    expiresIn,
+  });
+}
+
+export function sendAccessToken(
+  res: Response,
+  userId: string,
+  isNewUser: boolean
+) {
+  const accessToken = createAccessToken(userId, isNewUser, accessTokenMaxAge);
+
+  // Put the access token in an http-only cookie for web clients
+  res.cookie(keys.accessTokenCookie, accessToken, {
+    httpOnly: true,
+    secure: inProd,
+    maxAge: ms(accessTokenMaxAge),
+  });
+
+  // Send back the access token for mobile clients
+  return {
+    accessToken,
+  };
 }
 
 // TODO username functions below need to be tested and probably refactored
@@ -82,7 +88,7 @@ export async function generateUserId(prisma: PrismaClient) {
 export async function generateUsername(
   prisma: PrismaClient,
   email?: string | null,
-  name?: string | null
+  name?: { firstName?: string | null; lastName?: string | null } | null
 ) {
   if (email) {
     // Tweak the email into a valid username
@@ -317,4 +323,30 @@ export async function fetchProfileFromFacebook(
     email: profileInfo['email'],
   };
 }
+*/
+
+/*
+  This is not 100% guaranteed to be unique
+ Anyways the database will throw if not unique
+ 
+export async function generateUserId(prisma: PrismaClient) {
+  let userId = uuid();
+
+  // Check only once that the id is available
+  if (
+    await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+      },
+    })
+  ) {
+    return uuid();
+  } else {
+    return userId;
+  }
+}
+
 */

@@ -7,6 +7,7 @@ import { authenticate } from "../lib/authUtils";
 
 export interface ContextAuth {
   userId: string;
+  isNewUser?: true;
 }
 
 export interface Context {
