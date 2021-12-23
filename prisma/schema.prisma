@@ -111,11 +111,23 @@ model Post {
   createdAt DateTime  @default(now())
   deletedAt DateTime?
 
-  attachments Json? /// list of urls of images, videoes, any other downloadable file e.g pdfs (Only available for discussion posts)
-  coverUrl    String? // Only available for article posts
-
+  attachments      Json? /// list of urls of images, videoes, any other downloadable file e.g pdfs (Only available for discussion posts)
+  coverUrl         String? // Only available for article posts
   acceptedAnswerId String?  @unique // Only available for question posts
   acceptedAnswer   Comment? @relation("QuestionAcceptedAnswer", fields: [acceptedAnswerId], references: [id])
+
+  // Counters
+  votesCount     Int @default(0) @db.UnsignedInt
+  upvotesCount   Int @default(0) @db.UnsignedInt
+  downvotesCount Int @default(0) @db.UnsignedInt
+
+  viewsCount  Int @default(0) @db.UnsignedInt
+  sharesCount Int @default(0) @db.UnsignedInt
+
+  commentsCount Int  @default(0) @db.UnsignedInt
+  answersCount  Int? @db.UnsignedInt
+
+  ranking Int @default(0) @db.UnsignedInt
 
   // 1-n relations
   comments Comment[] @relation("PostComments")
@@ -128,20 +140,6 @@ model Post {
   votes  PostVote[]
   views  PostView[]
   shares PostShare[]
-
-  // Counters
-  votesCount     Int @default(0) @db.UnsignedInt
-  upvotesCount   Int @default(0) @db.UnsignedInt
-  downvotesCount Int @default(0) @db.UnsignedInt
-
-  viewsCount  Int @default(0) @db.UnsignedInt
-  sharesCount Int @default(0) @db.UnsignedInt
-
-  commentsCount Int @default(0) @db.UnsignedInt
-
-  answersCount Int? @db.UnsignedInt
-
-  ranking Int @default(0) @db.UnsignedInt
 }
 
 model PostEdit {
