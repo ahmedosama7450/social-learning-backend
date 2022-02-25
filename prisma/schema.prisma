@@ -111,10 +111,12 @@ model Post {
   createdAt DateTime  @default(now())
   deletedAt DateTime?
 
+  isPublished Boolean @default(false)
+
   attachments      Json? /// list of urls of images, videoes, any other downloadable file e.g pdfs (Only available for discussion posts)
   coverUrl         String? // Only available for article posts
   acceptedAnswerId String?  @unique // Only available for question posts
-  acceptedAnswer   Comment? @relation("QuestionAcceptedAnswer", fields: [acceptedAnswerId], references: [id])
+  acceptedAnswer   Comment? @relation("QuestionAcceptedAnswer", fields: [acceptedAnswerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   // Counters
   votesCount     Int @default(0) @db.UnsignedInt
@@ -156,6 +158,14 @@ model PostEdit {
 
   editedAt DateTime @default(now())
 }
+
+// model PostDraft {
+//   id String @id @default(uuid())
+
+//   postId String
+//   post   Post   @relation("PostDraft", fields: [postId], references: [id])
+
+// }
 
 // Relations
 // discussion Discussion? @relation("DiscussionPost")
@@ -199,7 +209,7 @@ model Comment {
 
   // Optional
   parentReplyId String? // TODO I am not sure if this should be required
-  parentReply   Comment?  @relation("CommentReplies", fields: [parentReplyId], references: [id])
+  parentReply   Comment?  @relation("CommentReplies", fields: [parentReplyId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies       Comment[] @relation("CommentReplies")
 
   createdAt DateTime @default(now())
