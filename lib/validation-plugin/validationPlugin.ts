@@ -79,7 +79,7 @@ type GeneralArgsValue = { [key: string]: any };
 type BaseValidatorTree<
   T extends string,
   F extends string,
-  Args extends ArgsValue<T, F>
+  Args extends ArgsValue<"", "">
 > = {
   [key in keyof Args]?: Args[key] extends { [key: string]: any }
     ? BaseValidatorTree<T, F, Args[key]>
@@ -93,7 +93,7 @@ type ValidatorTree<
 type BaseTransformerTree<
   T extends string,
   F extends string,
-  Args extends ArgsValue<T, F>
+  Args extends ArgsValue<"", "">
 > = {
   [key in keyof Args]?: Args[key] extends { [key: string]: any }
     ? BaseTransformerTree<T, F, Args[key]>
