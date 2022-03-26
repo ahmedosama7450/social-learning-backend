@@ -5,9 +5,10 @@
 
 
 import type { Context as Context } from "./../api/context"
+import type { ComputeResolver } from "E:\\social-learning-app\\backend\\lib\\computePlugin"
 import type { FieldAuthorizeResolver } from "nexus/dist/plugins/fieldAuthorizePlugin"
+import type { ValidateResolver, TransformResolver } from "E:\\social-learning-app\\backend\\node_modules\\nexus-args-validator\\dist"
 import type { core, connectionPluginCore } from "nexus"
-import type { ValidateResolver, TransformResolver } from "E:\\social-learning-app\\backend\\lib\\validation-plugin\\validationPlugin"
 declare global {
   interface NexusGenCustomInputMethods<TypeName extends string> {
     /**
@@ -74,21 +75,66 @@ declare global {
 }
 
 export interface NexusGenInputs {
-  ProfileCreateInput: { // input type
+  CommentCreateInput: { // input type
+    attachments?: string[] | null; // [String!]
+    body: string; // String!
+    parentReplyId?: string | null; // String
+    postId: string; // String!
+  }
+  CommentEditInput: { // input type
+    attachments?: string[] | null; // [String!]
+    body: string; // String!
+  }
+  PostCreateInput: { // input type
+    attachments?: string[] | null; // [String!]
+    body: string; // String!
+    collegeId?: number | null; // Int
+    coverUrl?: string | null; // String
+    isPublished: boolean; // Boolean!
+    tagsIds?: string[] | null; // [String!]
+    title: string; // String!
+    type: NexusGenEnums['PostType']; // PostType!
+    universityId?: number | null; // Int
+    year?: number | null; // Int
+  }
+  PostEditInput: { // input type
+    attachments?: string[] | null; // [String!]
+    body: string; // String!
+    collegeId?: number | null; // Int
+    coverUrl?: string | null; // String
+    isPublished: boolean; // Boolean!
+    tagsIds?: string[] | null; // [String!]
+    title: string; // String!
+    universityId?: number | null; // Int
+    year?: number | null; // Int
+  }
+  PostsWhereInput: { // input type
+    authorId?: string | null; // String
+    collegeId?: number | null; // Int
+    isPublished?: boolean | null; // Boolean
+    tagsIds?: string[] | null; // [String!]
+    type: NexusGenEnums['PostType']; // PostType!
+    universityId?: number | null; // Int
+    year?: number | null; // Int
+  }
+  UserCreateInput: { // input type
     avatar?: string | null; // String
     bio: string; // String!
-    college: number; // Int!
+    collegeId?: number | null; // Int
     firstName: string; // String!
     lastName: string; // String!
     locale: NexusGenEnums['Locale']; // Locale!
-    university: number; // Int!
+    universityId?: number | null; // Int
     username: string; // String!
-    year: number; // Int!
+    year?: number | null; // Int
   }
 }
 
 export interface NexusGenEnums {
+  CommentsSortingOption: "MOST_ACTIVE" | "MOST_RECENT" | "MOST_VOTED"
   Locale: "ARABIC" | "ENGLISH"
+  PostType: "ARTICLE" | "DISCUSSION" | "QUESTION"
+  PostsSortingOption: "MOST_RECENT" | "MOST_VOTED" | "TRENDING"
   Provider: "GOOGLE"
 }
 
@@ -106,26 +152,26 @@ export interface NexusGenScalars {
 }
 
 export interface NexusGenObjects {
-  Discussion: { // root type
-    authorId: number; // Int!
+  Comment: { // root type
+    attachments?: string[] | null; // [String!]
+    authorId: string; // String!
     body: string; // String!
-    college: number; // Int!
-    commentsCount: number; // Int!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     downvotesCount: number; // Int!
-    id: number; // Int!
-    tags: string[]; // [String!]!
-    university: number; // Int!
+    id: string; // ID!
+    parentReplyId?: string | null; // String
+    postId: string; // String!
     upvotesCount: number; // Int!
-    year: number; // Int!
+    votesCount: number; // Int!
   }
-  DiscussionConnection: { // root type
-    edges: NexusGenRootTypes['DiscussionEdge'][]; // [DiscussionEdge!]!
+  CommentConnection: { // root type
+    edges: NexusGenRootTypes['CommentEdge'][]; // [CommentEdge!]!
+    nodes: NexusGenRootTypes['Comment'][]; // [Comment!]!
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
-  DiscussionEdge: { // root type
+  CommentEdge: { // root type
     cursor: string; // String!
-    node: NexusGenRootTypes['Discussion']; // Discussion!
+    node: NexusGenRootTypes['Comment']; // Comment!
   }
   EduOrgs: { // root type
     colleges: NexusGenScalars['Json']; // Json!
@@ -146,27 +192,68 @@ export interface NexusGenObjects {
     hasPreviousPage: boolean; // Boolean!
     startCursor?: string | null; // String
   }
+  Post: { // root type
+    acceptedAnswerId?: string | null; // String
+    answersCount?: number | null; // Int
+    attachments?: string[] | null; // [String!]
+    authorId: string; // String!
+    body: string; // String!
+    collegeId?: number | null; // Int
+    commentsCount: number; // Int!
+    coverUrl?: string | null; // String
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    downvotesCount: number; // Int!
+    id: string; // ID!
+    isPublished: boolean; // Boolean!
+    ranking: number; // Int!
+    sharesCount: number; // Int!
+    tagsIds?: string[] | null; // [String!]
+    title: string; // String!
+    type: NexusGenEnums['PostType']; // PostType!
+    universityId?: number | null; // Int
+    upvotesCount: number; // Int!
+    viewsCount: number; // Int!
+    votesCount: number; // Int!
+    year?: number | null; // Int
+  }
+  PostConnection: { // root type
+    edges: NexusGenRootTypes['PostEdge'][]; // [PostEdge!]!
+    nodes: NexusGenRootTypes['Post'][]; // [Post!]!
+    pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
+  }
+  PostEdge: { // root type
+    cursor: string; // String!
+    node: NexusGenRootTypes['Post']; // Post!
+  }
   Profile: { // root type
     bio: string; // String!
-    college: number; // Int!
+    collegeId?: number | null; // Int
     locale: NexusGenEnums['Locale']; // Locale!
-    university: number; // Int!
-    userId: number; // Int!
-    year: number; // Int!
+    universityId?: number | null; // Int
+    year?: number | null; // Int
   }
   Query: {};
-  User: { // root type
-    avatar?: string | null; // String
+  TempUserInfo: { // root type
     email?: string | null; // String
+    firstName: string; // String!
+    id: string; // ID!
+    lastName: string; // String!
+    username: string; // String!
+  }
+  User: { // root type
+    answersCount: number; // Int!
+    articlesCount: number; // Int!
+    avatar?: string | null; // String
+    commentsCount: number; // Int!
+    discussionsCount: number; // Int!
     firstName: string; // String!
     followersCount: number; // Int!
     followingCount: number; // Int!
-    id: number; // Int!
-    isActive: boolean; // Boolean!
-    isVerified: boolean; // Boolean!
+    id: string; // ID!
     joinedAt: NexusGenScalars['DateTime']; // DateTime!
     lastName: string; // String!
     provider: NexusGenEnums['Provider']; // Provider!
+    questionsCount: number; // Int!
     reputation: number; // Int!
     username: string; // String!
   }
@@ -183,27 +270,29 @@ export type NexusGenRootTypes = NexusGenObjects
 export type NexusGenAllTypes = NexusGenRootTypes & NexusGenScalars & NexusGenEnums
 
 export interface NexusGenFieldTypes {
-  Discussion: { // field return type
+  Comment: { // field return type
+    attachments: string[] | null; // [String!]
     author: NexusGenRootTypes['User']; // User!
-    authorId: number; // Int!
+    authorId: string; // String!
     body: string; // String!
-    college: number; // Int!
-    commentsCount: number; // Int!
     createdAt: NexusGenScalars['DateTime']; // DateTime!
     downvotesCount: number; // Int!
-    id: number; // Int!
-    tags: string[]; // [String!]!
-    university: number; // Int!
+    id: string; // ID!
+    parentReply: NexusGenRootTypes['Comment'] | null; // Comment
+    parentReplyId: string | null; // String
+    post: NexusGenRootTypes['Post']; // Post!
+    postId: string; // String!
     upvotesCount: number; // Int!
-    year: number; // Int!
+    votesCount: number; // Int!
   }
-  DiscussionConnection: { // field return type
-    edges: NexusGenRootTypes['DiscussionEdge'][]; // [DiscussionEdge!]!
+  CommentConnection: { // field return type
+    edges: NexusGenRootTypes['CommentEdge'][]; // [CommentEdge!]!
+    nodes: NexusGenRootTypes['Comment'][]; // [Comment!]!
     pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
   }
-  DiscussionEdge: { // field return type
+  CommentEdge: { // field return type
     cursor: string; // String!
-    node: NexusGenRootTypes['Discussion']; // Discussion!
+    node: NexusGenRootTypes['Comment']; // Comment!
   }
   EduOrgs: { // field return type
     colleges: NexusGenScalars['Json']; // Json!
@@ -218,7 +307,13 @@ export interface NexusGenFieldTypes {
     accessToken: string; // String!
   }
   Mutation: { // field return type
-    createProfile: NexusGenRootTypes['User']; // User!
+    createComment: boolean; // Boolean!
+    createPost: string; // ID!
+    createUser: NexusGenRootTypes['LoginResponse']; // LoginResponse!
+    deleteComment: boolean; // Boolean!
+    deletePost: string; // ID!
+    editComment: boolean; // Boolean!
+    editPost: boolean; // Boolean!
     loginWithProvider: NexusGenRootTypes['LoginResponse']; // LoginResponse!
     logout: boolean; // Boolean!
   }
@@ -228,59 +323,110 @@ export interface NexusGenFieldTypes {
     hasPreviousPage: boolean; // Boolean!
     startCursor: string | null; // String
   }
+  Post: { // field return type
+    acceptedAnswer: NexusGenRootTypes['Comment'] | null; // Comment
+    acceptedAnswerId: string | null; // String
+    answersCount: number | null; // Int
+    attachments: string[] | null; // [String!]
+    author: NexusGenRootTypes['User']; // User!
+    authorId: string; // String!
+    body: string; // String!
+    collegeId: number | null; // Int
+    commentsCount: number; // Int!
+    coverUrl: string | null; // String
+    createdAt: NexusGenScalars['DateTime']; // DateTime!
+    downvotesCount: number; // Int!
+    id: string; // ID!
+    isPublished: boolean; // Boolean!
+    ranking: number; // Int!
+    sharesCount: number; // Int!
+    tagsIds: string[] | null; // [String!]
+    title: string; // String!
+    type: NexusGenEnums['PostType']; // PostType!
+    universityId: number | null; // Int
+    upvotesCount: number; // Int!
+    viewsCount: number; // Int!
+    votesCount: number; // Int!
+    year: number | null; // Int
+  }
+  PostConnection: { // field return type
+    edges: NexusGenRootTypes['PostEdge'][]; // [PostEdge!]!
+    nodes: NexusGenRootTypes['Post'][]; // [Post!]!
+    pageInfo: NexusGenRootTypes['PageInfo']; // PageInfo!
+  }
+  PostEdge: { // field return type
+    cursor: string; // String!
+    node: NexusGenRootTypes['Post']; // Post!
+  }
   Profile: { // field return type
     bio: string; // String!
-    college: number; // Int!
+    collegeId: number | null; // Int
     locale: NexusGenEnums['Locale']; // Locale!
-    university: number; // Int!
-    userId: number; // Int!
-    year: number; // Int!
+    universityId: number | null; // Int
+    year: number | null; // Int
   }
   Query: { // field return type
-    discussions: NexusGenRootTypes['DiscussionConnection']; // DiscussionConnection!
+    comment: NexusGenRootTypes['Comment']; // Comment!
+    comments: NexusGenRootTypes['CommentConnection']; // CommentConnection!
     eduOrgsInfo: NexusGenRootTypes['EduOrgsInfo']; // EduOrgsInfo!
+    fakeLogin: NexusGenRootTypes['LoginResponse']; // LoginResponse!
     me: NexusGenRootTypes['User']; // User!
+    newsfeed: NexusGenRootTypes['PostConnection']; // PostConnection!
+    post: NexusGenRootTypes['Post']; // Post!
+    posts: NexusGenRootTypes['PostConnection']; // PostConnection!
+    tempUserInfo: NexusGenRootTypes['TempUserInfo']; // TempUserInfo!
+  }
+  TempUserInfo: { // field return type
+    email: string | null; // String
+    firstName: string; // String!
+    id: string; // ID!
+    lastName: string; // String!
+    username: string; // String!
   }
   User: { // field return type
+    answersCount: number; // Int!
+    articlesCount: number; // Int!
     avatar: string | null; // String
-    email: string | null; // String
+    commentsCount: number; // Int!
+    discussionsCount: number; // Int!
     firstName: string; // String!
     followersCount: number; // Int!
     followingCount: number; // Int!
-    id: number; // Int!
-    isActive: boolean; // Boolean!
-    isVerified: boolean; // Boolean!
+    id: string; // ID!
     joinedAt: NexusGenScalars['DateTime']; // DateTime!
     lastName: string; // String!
-    profile: NexusGenRootTypes['Profile'] | null; // Profile
+    profile: NexusGenRootTypes['Profile']; // Profile!
     provider: NexusGenEnums['Provider']; // Provider!
+    questionsCount: number; // Int!
     reputation: number; // Int!
     username: string; // String!
   }
 }
 
 export interface NexusGenFieldTypeNames {
-  Discussion: { // field return type name
+  Comment: { // field return type name
+    attachments: 'String'
     author: 'User'
-    authorId: 'Int'
+    authorId: 'String'
     body: 'String'
-    college: 'Int'
-    commentsCount: 'Int'
     createdAt: 'DateTime'
     downvotesCount: 'Int'
-    id: 'Int'
-    tags: 'String'
-    university: 'Int'
+    id: 'ID'
+    parentReply: 'Comment'
+    parentReplyId: 'String'
+    post: 'Post'
+    postId: 'String'
     upvotesCount: 'Int'
-    year: 'Int'
+    votesCount: 'Int'
   }
-  DiscussionConnection: { // field return type name
-    edges: 'DiscussionEdge'
+  CommentConnection: { // field return type name
+    edges: 'CommentEdge'
+    nodes: 'Comment'
     pageInfo: 'PageInfo'
   }
-  DiscussionEdge: { // field return type name
+  CommentEdge: { // field return type name
     cursor: 'String'
-    node: 'Discussion'
+    node: 'Comment'
   }
   EduOrgs: { // field return type name
     colleges: 'Json'
@@ -295,7 +441,13 @@ export interface NexusGenFieldTypeNames {
     accessToken: 'String'
   }
   Mutation: { // field return type name
-    createProfile: 'User'
+    createComment: 'Boolean'
+    createPost: 'ID'
+    createUser: 'LoginResponse'
+    deleteComment: 'Boolean'
+    deletePost: 'ID'
+    editComment: 'Boolean'
+    editPost: 'Boolean'
     loginWithProvider: 'LoginResponse'
     logout: 'Boolean'
   }
@@ -305,32 +457,81 @@ export interface NexusGenFieldTypeNames {
     hasPreviousPage: 'Boolean'
     startCursor: 'String'
   }
+  Post: { // field return type name
+    acceptedAnswer: 'Comment'
+    acceptedAnswerId: 'String'
+    answersCount: 'Int'
+    attachments: 'String'
+    author: 'User'
+    authorId: 'String'
+    body: 'String'
+    collegeId: 'Int'
+    commentsCount: 'Int'
+    coverUrl: 'String'
+    createdAt: 'DateTime'
+    downvotesCount: 'Int'
+    id: 'ID'
+    isPublished: 'Boolean'
+    ranking: 'Int'
+    sharesCount: 'Int'
+    tagsIds: 'String'
+    title: 'String'
+    type: 'PostType'
+    universityId: 'Int'
+    upvotesCount: 'Int'
+    viewsCount: 'Int'
+    votesCount: 'Int'
+    year: 'Int'
+  }
+  PostConnection: { // field return type name
+    edges: 'PostEdge'
+    nodes: 'Post'
+    pageInfo: 'PageInfo'
+  }
+  PostEdge: { // field return type name
+    cursor: 'String'
+    node: 'Post'
+  }
   Profile: { // field return type name
     bio: 'String'
-    college: 'Int'
+    collegeId: 'Int'
     locale: 'Locale'
-    university: 'Int'
-    userId: 'Int'
+    universityId: 'Int'
     year: 'Int'
   }
   Query: { // field return type name
-    discussions: 'DiscussionConnection'
+    comment: 'Comment'
+    comments: 'CommentConnection'
     eduOrgsInfo: 'EduOrgsInfo'
+    fakeLogin: 'LoginResponse'
     me: 'User'
+    newsfeed: 'PostConnection'
+    post: 'Post'
+    posts: 'PostConnection'
+    tempUserInfo: 'TempUserInfo'
+  }
+  TempUserInfo: { // field return type name
+    email: 'String'
+    firstName: 'String'
+    id: 'ID'
+    lastName: 'String'
+    username: 'String'
   }
   User: { // field return type name
+    answersCount: 'Int'
+    articlesCount: 'Int'
     avatar: 'String'
-    email: 'String'
+    commentsCount: 'Int'
+    discussionsCount: 'Int'
     firstName: 'String'
     followersCount: 'Int'
     followingCount: 'Int'
-    id: 'Int'
-    isActive: 'Boolean'
-    isVerified: 'Boolean'
+    id: 'ID'
     joinedAt: 'DateTime'
     lastName: 'String'
     profile: 'Profile'
     provider: 'Provider'
+    questionsCount: 'Int'
     reputation: 'Int'
     username: 'String'
   }
@@ -338,8 +539,29 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Mutation: {
-    createProfile: { // args
-      profileCreateInput: NexusGenInputs['ProfileCreateInput']; // ProfileCreateInput!
+    createComment: { // args
+      commentCreateInput: NexusGenInputs['CommentCreateInput']; // CommentCreateInput!
+      isAnswer: boolean; // Boolean!
+    }
+    createPost: { // args
+      postCreateInput: NexusGenInputs['PostCreateInput']; // PostCreateInput!
+    }
+    createUser: { // args
+      userCreateInput: NexusGenInputs['UserCreateInput']; // UserCreateInput!
+    }
+    deleteComment: { // args
+      id: string; // ID!
+    }
+    deletePost: { // args
+      id: string; // ID!
+    }
+    editComment: { // args
+      commentEditInput: NexusGenInputs['CommentEditInput']; // CommentEditInput!
+      id: string; // ID!
+    }
+    editPost: { // args
+      id: string; // ID!
+      postEditInput: NexusGenInputs['PostEditInput']; // PostEditInput!
     }
     loginWithProvider: { // args
       code: string; // String!
@@ -347,14 +569,35 @@ export interface NexusGenArgTypes {
     }
   }
   Query: {
-    discussions: { // args
+    comment: { // args
+      id: string; // ID!
+    }
+    comments: { // args
       after?: string | null; // String
-      before?: string | null; // String
-      first?: number | null; // Int
-      last?: number | null; // Int
+      first: number; // Int!
+      parentReplyId?: string | null; // String
+      postId: string; // String!
+      queryAnswers: boolean; // Boolean!
+      sorting: NexusGenEnums['CommentsSortingOption']; // CommentsSortingOption!
     }
     eduOrgsInfo: { // args
       cachedVersion?: number | null; // Int
+    }
+    fakeLogin: { // args
+      userId: string; // String!
+    }
+    newsfeed: { // args
+      after?: string | null; // String
+      first: number; // Int!
+    }
+    post: { // args
+      id: string; // ID!
+    }
+    posts: { // args
+      after?: string | null; // String
+      first: number; // Int!
+      postsWhereInput: NexusGenInputs['PostsWhereInput']; // PostsWhereInput!
+      sorting: NexusGenEnums['PostsSortingOption']; // PostsSortingOption!
     }
   }
 }
@@ -423,6 +666,10 @@ declare global {
   }
   interface NexusGenPluginFieldConfig<TypeName extends string, FieldName extends string> {
     /**
+     * Compute expensive operations
+     */
+    compute?: ComputeResolver<TypeName, FieldName>
+    /**
      * Authorization for an individual field. Returning "true"
      * or "Promise<true>" means the field can be accessed.
      * Returning "false" or "Promise<false>" will respond
@@ -431,7 +678,6 @@ declare global {
      * resolver from executing.
      */
     authorize?: FieldAuthorizeResolver<TypeName, FieldName>
-    
     /**
      * Validation for arguments
      */
@@ -440,6 +686,7 @@ declare global {
      * Transformation for arguments
      */
     transform?: TransformResolver<TypeName, FieldName>
+    
   }
   interface NexusGenPluginInputFieldConfig<TypeName extends string, FieldName extends string> {
   }

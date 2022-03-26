@@ -1,10 +1,10 @@
 import { makeSchema, fieldAuthorizePlugin, connectionPlugin } from "nexus";
-import { AuthenticationError } from "apollo-server-express";
+import { ApolloError, AuthenticationError } from "apollo-server-express";
+import { argsValidatorPlugin } from "nexus-args-validator";
 import { join } from "path";
 
-import * as types from "./graphql";
-import { validationPlugin } from "../lib/validation-plugin/validationPlugin";
 import { computePlugin } from "../lib/computePlugin";
+import * as types from "./graphql";
 
 export default makeSchema({
   types,
@@ -16,7 +16,17 @@ export default makeSchema({
         return new AuthenticationError("Not authenticated or authorized");
       },
     }),
-    validationPlugin,
+    argsValidatorPlugin({
+      onValidationError(errorsTree) {
+        throw new ApolloError(
+          "One or more arguments failed validation",
+          "VALIDATION_FAILED",
+          {
+            validationErrors: errorsTree,
+          }
+        );
+      },
+    }),
     connectionPlugin({
       includeNodesField: true,
     }),

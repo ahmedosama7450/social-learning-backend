@@ -11,34 +11,30 @@ scalar BigInt
 """The `Byte` scalar type represents byte value as a Buffer"""
 scalar Bytes
 
-"""
-A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-"""
-scalar DateTime
-
-"""An arbitrary-precision Decimal type"""
-scalar Decimal
-
-type Discussion {
+type Comment {
+  attachments: [String!]
   author: User!
-  authorId: Int!
+  authorId: String!
   body: String!
-  college: Int!
-  commentsCount: Int!
   createdAt: DateTime!
   downvotesCount: Int!
-  id: Int!
-  tags: [String!]!
-  university: Int!
+  id: ID!
+  parentReply: Comment
+  parentReplyId: String
+  post: Post!
+  postId: String!
   upvotesCount: Int!
-  year: Int!
+  votesCount: Int!
 }
 
-type DiscussionConnection {
+type CommentConnection {
   """
   https://facebook.github.io/relay/graphql/connections.htm#sec-Edge-Types
   """
-  edges: [DiscussionEdge!]!
+  edges: [CommentEdge!]!
+
+  """Flattened list of Comment type"""
+  nodes: [Comment!]!
 
   """
   https://facebook.github.io/relay/graphql/connections.htm#sec-undefined.PageInfo
@@ -46,13 +42,39 @@ type DiscussionConnection {
   pageInfo: PageInfo!
 }
 
-type DiscussionEdge {
+input CommentCreateInput {
+  attachments: [String!]
+  body: String!
+  parentReplyId: String
+  postId: String!
+}
+
+type CommentEdge {
   """https://facebook.github.io/relay/graphql/connections.htm#sec-Cursor"""
   cursor: String!
 
   """https://facebook.github.io/relay/graphql/connections.htm#sec-Node"""
-  node: Discussion!
+  node: Comment!
 }
+
+input CommentEditInput {
+  attachments: [String!]
+  body: String!
+}
+
+enum CommentsSortingOption {
+  MOST_ACTIVE
+  MOST_RECENT
+  MOST_VOTED
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+"""An arbitrary-precision Decimal type"""
+scalar Decimal
 
 type EduOrgs {
   colleges: Json!
@@ -80,13 +102,20 @@ type LoginResponse {
 }
 
 type Mutation {
-  """
-  Calling this mutation if profile is already created will result in an error
-  """
-  createProfile(profileCreateInput: ProfileCreateInput!): User!
+  createComment(commentCreateInput: CommentCreateInput!, isAnswer: Boolean!): Boolean!
+  createPost(postCreateInput: PostCreateInput!): ID!
 
   """
-  Create an access token for the user + put it in a cookie. if the user doesn't exist, a new user is created
+  Calling this mutation if user is already created will result in an error
+  """
+  createUser(userCreateInput: UserCreateInput!): LoginResponse!
+  deleteComment(id: ID!): Boolean!
+  deletePost(id: ID!): ID!
+  editComment(commentEditInput: CommentEditInput!, id: ID!): Boolean!
+  editPost(id: ID!, postEditInput: PostEditInput!): Boolean!
+
+  """
+  Create an access token for the user and put it in a cookie. if the user doesn't exist, an id is generated to make the token and the user info from provider is saved in a TempUserInfo record
   """
   loginWithProvider(code: String!, provider: Provider!): LoginResponse!
 
@@ -119,28 +148,109 @@ type PageInfo {
   startCursor: String
 }
 
-type Profile {
-  bio: String!
-  college: Int!
-  locale: Locale!
-  university: Int!
-  userId: Int!
-  year: Int!
+type Post {
+  acceptedAnswer: Comment
+  acceptedAnswerId: String
+  answersCount: Int
+  attachments: [String!]
+  author: User!
+  authorId: String!
+  body: String!
+  collegeId: Int
+  commentsCount: Int!
+  coverUrl: String
+  createdAt: DateTime!
+  downvotesCount: Int!
+  id: ID!
+  isPublished: Boolean!
+  ranking: Int!
+  sharesCount: Int!
+  tagsIds: [String!]
+  title: String!
+  type: PostType!
+  universityId: Int
+  upvotesCount: Int!
+  viewsCount: Int!
+  votesCount: Int!
+  year: Int
 }
 
-input ProfileCreateInput {
+type PostConnection {
   """
-  This is not a url to the avatar but more of a choice that's determined by the frontend
+  https://facebook.github.io/relay/graphql/connections.htm#sec-Edge-Types
   """
-  avatar: String
+  edges: [PostEdge!]!
+
+  """Flattened list of Post type"""
+  nodes: [Post!]!
+
+  """
+  https://facebook.github.io/relay/graphql/connections.htm#sec-undefined.PageInfo
+  """
+  pageInfo: PageInfo!
+}
+
+input PostCreateInput {
+  attachments: [String!]
+  body: String!
+  collegeId: Int
+  coverUrl: String
+  isPublished: Boolean!
+  tagsIds: [String!]
+  title: String!
+  type: PostType!
+  universityId: Int
+  year: Int
+}
+
+type PostEdge {
+  """https://facebook.github.io/relay/graphql/connections.htm#sec-Cursor"""
+  cursor: String!
+
+  """https://facebook.github.io/relay/graphql/connections.htm#sec-Node"""
+  node: Post!
+}
+
+input PostEditInput {
+  attachments: [String!]
+  body: String!
+  collegeId: Int
+  coverUrl: String
+  isPublished: Boolean!
+  tagsIds: [String!]
+  title: String!
+  universityId: Int
+  year: Int
+}
+
+enum PostType {
+  ARTICLE
+  DISCUSSION
+  QUESTION
+}
+
+enum PostsSortingOption {
+  MOST_RECENT
+  MOST_VOTED
+  TRENDING
+}
+
+input PostsWhereInput {
+  authorId: String
+  collegeId: Int
+  isPublished: Boolean
+  tagsIds: [String!]
+  type: PostType!
+  universityId: Int
+  year: Int
+}
+
+type Profile {
   bio: String!
-  college: Int!
-  firstName: String!
-  lastName: String!
+  collegeId: Int
   locale: Locale!
-  university: Int!
-  username: String!
-  year: Int!
+  universityId: Int
+  year: Int
 }
 
 enum Provider {
@@ -148,45 +258,95 @@ enum Provider {
 }
 
 type Query {
-  discussions(
+  comment(id: ID!): Comment!
+  comments(
     """Returns the elements in the list that come after the specified cursor"""
     after: String
 
-    """Returns the elements in the list that come before the specified cursor"""
-    before: String
-
     """Returns the first n elements from the list."""
-    first: Int
-
-    """Returns the last n elements from the list."""
-    last: Int
-  ): DiscussionConnection!
+    first: Int!
+    parentReplyId: String
+    postId: String!
+    queryAnswers: Boolean!
+    sorting: CommentsSortingOption!
+  ): CommentConnection!
 
   """
   cachedVersion is compared to the current version to decide if we need to send data back or not. the version is always sent back
   """
   eduOrgsInfo(cachedVersion: Int): EduOrgsInfo!
+  fakeLogin(userId: String!): LoginResponse!
   me: User!
+  newsfeed(
+    """Returns the elements in the list that come after the specified cursor"""
+    after: String
+
+    """Returns the first n elements from the list."""
+    first: Int!
+  ): PostConnection!
+  post(id: ID!): Post!
+
+  """
+  If isPublished is false, authorId must be provided and the user must be authenticated
+  """
+  posts(
+    """Returns the elements in the list that come after the specified cursor"""
+    after: String
+
+    """Returns the first n elements from the list."""
+    first: Int!
+    postsWhereInput: PostsWhereInput!
+    sorting: PostsSortingOption!
+  ): PostConnection!
+
+  """
+  Only exists if the user logged in for the first time and gets removed after the user is created
+  """
+  tempUserInfo: TempUserInfo!
+}
+
+type TempUserInfo {
+  email: String
+  firstName: String!
+  id: ID!
+  lastName: String!
+  username: String!
 }
 
 type User {
+  answersCount: Int!
+  articlesCount: Int!
+
   """
-  This is not a url to the avatar but more of a choice that's determined by the frontend
+  This is not a url to the avatar but more of an id of a choice that's determined by the frontend
   """
   avatar: String
-  email: String
+  commentsCount: Int!
+  discussionsCount: Int!
   firstName: String!
   followersCount: Int!
   followingCount: Int!
-  id: Int!
-
-  """isActive is false if the user is banned"""
-  isActive: Boolean!
-  isVerified: Boolean!
+  id: ID!
   joinedAt: DateTime!
   lastName: String!
-  profile: Profile
+  profile: Profile!
   provider: Provider!
+  questionsCount: Int!
   reputation: Int!
   username: String!
+}
+
+input UserCreateInput {
+  """
+  This is not a url to the avatar but more of an id of a choice that's determined by the frontend
+  """
+  avatar: String
+  bio: String!
+  collegeId: Int
+  firstName: String!
+  lastName: String!
+  locale: Locale!
+  universityId: Int
+  username: String!
+  year: Int
 }

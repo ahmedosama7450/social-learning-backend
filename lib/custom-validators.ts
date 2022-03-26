@@ -3,12 +3,20 @@ import { PostType } from "@prisma/client";
 import {
   defineValidator,
   rangeSize,
-  validUrl,
-  validUrls,
-} from "./validation-plugin/validators";
+} from "nexus-args-validator/dist/validators";
 import { colleges, universities, tags } from "./eduOrgsInfo";
 import * as prefs from "./prefs";
 import { MaybeNullable } from "./types";
+
+// TODO Can't import is-url-superb (use in validUrl and validUrls)
+
+export const validUrl = defineValidator<string>("invalid-url", (arg) => {
+  return true;
+});
+
+export const validUrls = defineValidator<string[]>("invalid-url", (arg) => {
+  return true;
+});
 
 export const universityValidator = defineValidator<number>(
   "university-invalid",
